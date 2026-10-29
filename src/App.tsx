@@ -52,7 +52,7 @@ export default function App() {
   const [data, setData] = useState<ScanData>(EMPTY);
   const [activeScanId, setActiveScanId] = useState<string | null>(null); // set while a scan runs
   const [error, setError] = useState<string | null>(null);
-  const logEnd = useRef<HTMLDivElement>(null);
+  const logPanel = useRef<HTMLElement>(null);
 
   useEffect(() => {
     getJson<Org[]>("/api/orgs")
@@ -88,7 +88,11 @@ export default function App() {
     return () => clearInterval(timer);
   }, [activeScanId, poll]);
 
-  useEffect(() => logEnd.current?.scrollIntoView({ block: "nearest" }), [data.log.length]);
+  // Keep the newest log line in view (scrolls the panel only, not the page).
+  useEffect(() => {
+    const panel = logPanel.current;
+    if (panel) panel.scrollTop = panel.scrollHeight;
+  }, [data.log.length]);
 
   async function findFunding() {
     setError(null);
@@ -167,7 +171,7 @@ export default function App() {
           </div>
         </section>
 
-        <aside className="log">
+        <aside className="log" ref={logPanel}>
           <h2>Activity</h2>
           {data.log.length === 0 && <p className="empty">{running ? "Starting…" : "Click “Find funding” to start a scan."}</p>}
           <ol>
@@ -177,7 +181,6 @@ export default function App() {
               </li>
             ))}
           </ol>
-          <div ref={logEnd} />
           {data.scan?.sources_checked?.length ? (
             <p className="sources">Sources checked: {data.scan.sources_checked.join(", ")}</p>
           ) : null}
