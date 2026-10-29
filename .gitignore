@@ -1,0 +1,9 @@
+node_modules/
+dist/
+.netlify/
+.DS_Store
+
+# Secrets: never commit these
+.env
+.env.*
+!.env.example
