@@ -164,15 +164,25 @@ export async function scout(org: Org, scanId: string): Promise<{ candidates: Can
     handlers,
     finishTool: "submit_candidates",
     maxToolCalls: 8,
-    onBlock: (block) => {
+    onBlock: async (block) => {
       if (block.type === "server_tool_use" && block.name === "web_search") {
         sourcesChecked.add("Web search");
         const query = (block.input as { query?: string }).query;
-        void logStep(scanId, "Scout", `Searching the web: "${query}"`);
+        await logStep(scanId, "Scout", `Searching the web: "${query}"`);
       }
       if (block.type === "web_search_tool_result" && Array.isArray(block.content)) {
         block.content.forEach((r) => seenUrls.add(normalizeUrl(r.url)));
       }
+    },
+    // The Scout's own quality bar: send thin lists back for another pass.
+    checkFinish: (input: { candidates: Candidate[] }) => {
+      const members = input.candidates.filter((c) => c.audience === "members").length;
+      const problems = [];
+      if (input.candidates.length < 8) problems.push(`only ${input.candidates.length} candidates (aim for 10 to 16)`);
+      if (members < 4) problems.push(`only ${members} member opportunities (need at least 4)`);
+      if (problems.length === 0) return null;
+      void logStep(scanId, "Scout", `Results too thin (${problems.join(", ")}), searching again`);
+      return `Not submitted: ${problems.join("; ")}. Add more from your earlier search results, or run another web search, then call submit_candidates again with the full list.`;
     },
   });
 
