@@ -29,6 +29,7 @@ create table funding_library (
   provider text not null,
   type text not null check (type in ('university', 'grant', 'sponsor', 'award', 'competition')),
   funding_category text not null check (funding_category in ('events', 'operational', 'travel', 'general')),
+  audience text not null default 'club' check (audience in ('club', 'members')), -- members = scholarships etc. for individual members
   eligibility_notes text,
   typical_amount text,
   deadline_notes text,
@@ -42,7 +43,9 @@ create table scans (
   started_at timestamptz not null default now(),
   finished_at timestamptz,
   sources_checked text[] not null default '{}',
-  counts jsonb not null default '{}'
+  counts jsonb not null default '{}',
+  status text not null default 'running' check (status in ('running', 'done', 'failed')),
+  error text
 );
 
 create table opportunities (
@@ -51,6 +54,7 @@ create table opportunities (
   scan_id uuid references scans(id) on delete set null,
   source text not null check (source in ('library', 'grants_gov', 'web', 'pasted')),
   library_id uuid references funding_library(id) on delete set null,
+  audience text not null default 'club' check (audience in ('club', 'members')),
   title text not null,
   provider text,
   url text not null,

@@ -14,7 +14,7 @@ Finds the funding your club didn't know existed. CU Boulder Applied AI capstone.
 
 ## Run locally
 
-Needs Node.js 20+.
+Needs Node.js 22+.
 
 ```bash
 npm install
