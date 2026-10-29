@@ -45,7 +45,7 @@ insert into orgs (name, type, university, member_count, is_registered_student_or
 insert into funding_library (name, provider, type, funding_category, eligibility_notes,
                              typical_amount, deadline_notes, url) values
 (
-  'CUSG SOAC — Event funding', 'CU Student Government (SOAC) / Center for Student Involvement',
+  'CUSG SOAC: Event funding', 'CU Student Government (SOAC) / Center for Student Involvement',
   'university', 'events',
   'Registered Student Organization open to all CU Boulder students. Events must engage the broader campus community and be open and free to all CU Boulder students. Submitted through BuffConnect.',
   'Part of the per-year SOAC cap (about $1,000 for new RSOs, $5,000 for established RSOs). Food has its own limit; confirm the current amount.',
@@ -53,7 +53,7 @@ insert into funding_library (name, provider, type, funding_category, eligibility
   'https://www.colorado.edu/cusg/about-us/executive-branch/student-organization-allocations-committee'
 ),
 (
-  'CUSG SOAC — Operational funding', 'CU Student Government (SOAC) / Center for Student Involvement',
+  'CUSG SOAC: Operational funding', 'CU Student Government (SOAC) / Center for Student Involvement',
   'university', 'operational',
   'Registered Student Organization open to all CU Boulder students. Day-to-day needs: recruiting materials (posters, banners, t-shirts), food for member meetings, equipment needed for the org''s purpose. Submitted through BuffConnect.',
   'Part of the per-year SOAC cap (about $1,000 new / $5,000 established).',
@@ -61,7 +61,7 @@ insert into funding_library (name, provider, type, funding_category, eligibility
   'https://www.colorado.edu/cusg/about-us/executive-branch/student-organization-allocations-committee'
 ),
 (
-  'CUSG SOAC — Travel funding', 'CU Student Government (SOAC) / Center for Student Involvement',
+  'CUSG SOAC: Travel funding', 'CU Student Government (SOAC) / Center for Student Involvement',
   'university', 'travel',
   'Off-campus trips over a 60-mile round trip that need an overnight stay. Covers lodging, ground transport, parking, airfare, and conference or competition registration. No international travel and no retreats. Submitted through BuffConnect.',
   'Up to $5,000 per year across all student-fee funding sources.',
