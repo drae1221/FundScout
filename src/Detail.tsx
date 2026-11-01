@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useState, type ReactNode } from "react";
 import type { LogLine, Opportunity } from "./App";
+import { DEMO_MODE, demoChanges, demoDrafted, loadDemoRun, replay } from "./demo";
 
-interface Draft {
+export interface Draft {
   id: string;
   draft_type: "cu_funding_request" | "grant_application" | "sponsor_pitch";
   content: string;
@@ -31,6 +32,20 @@ export default function Detail({ id }: { id: string }) {
   const [drafting, setDrafting] = useState<{ draftId: string | null; logLength: number } | null>(null);
 
   const load = useCallback(async () => {
+    if (DEMO_MODE) {
+      // Cached demo: everything comes from the saved run; the draft shows once "written".
+      const run = await loadDemoRun();
+      const saved = run.opportunities.find((o) => o.id === id);
+      if (!saved) throw new Error("This opportunity isn't in the cached demo run");
+      const d: DetailData = {
+        opportunity: { ...saved, ...demoChanges[id] },
+        org: run.org,
+        draft: demoDrafted.has(id) ? run.drafts[id] ?? null : null,
+        log: [],
+      };
+      setData(d);
+      return d;
+    }
     const res = await fetch(`/api/opportunity?id=${id}`);
     if (!res.ok) throw new Error(`Couldn't load this opportunity (${res.status})`);
     const d: DetailData = await res.json();
@@ -43,7 +58,7 @@ export default function Detail({ id }: { id: string }) {
   }, [load]);
 
   useEffect(() => {
-    if (!drafting) return;
+    if (!drafting || DEMO_MODE) return;
     const timer = setInterval(async () => {
       const d = await load().catch(() => null);
       if (!d) return;
@@ -61,6 +76,23 @@ export default function Detail({ id }: { id: string }) {
     if (!data) return;
     setError(null);
     setDrafting({ draftId: data.draft?.id ?? null, logLength: data.log.length });
+    if (DEMO_MODE) {
+      const run = await loadDemoRun();
+      const lines = run.draftLogs[id] ?? [];
+      if (!run.drafts[id]) {
+        setDrafting(null);
+        return setError("The cached demo run has no draft for this opportunity. Try CUSG SOAC: Event funding.");
+      }
+      replay(lines, (line, i) => {
+        setData((d) => (d ? { ...d, log: [...d.log, line] } : d));
+        if (i === lines.length - 1) {
+          demoDrafted.add(id);
+          setData((d) => (d ? { ...d, draft: run.drafts[id] } : d));
+          setDrafting(null);
+        }
+      }, 4);
+      return;
+    }
     const res = await fetch("/.netlify/functions/draft-background", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -74,6 +106,10 @@ export default function Detail({ id }: { id: string }) {
 
   async function update(changes: { status?: string; deadline_verified?: boolean }) {
     setError(null);
+    if (DEMO_MODE) {
+      demoChanges[id] = { ...demoChanges[id], ...(changes as Partial<Opportunity>) };
+      return setData((d) => (d ? { ...d, opportunity: { ...d.opportunity, ...demoChanges[id] } } : d));
+    }
     const res = await fetch("/api/opportunity-update", {
       method: "POST",
       headers: { "Content-Type": "application/json" },

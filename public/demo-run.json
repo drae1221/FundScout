@@ -1,0 +1,459 @@
+{
+  "saved_at": "2026-11-01T22:02:23.836Z",
+  "org": {
+    "id": "64ebe371-b582-4ff2-b49f-23fcd6fc4041",
+    "name": "AI Club",
+    "type": "student_club"
+  },
+  "scan": {
+    "id": "5a8944f8-37eb-4d6e-9342-7bc72281b110",
+    "org_id": "64ebe371-b582-4ff2-b49f-23fcd6fc4041",
+    "started_at": "2026-11-01T21:57:07.434657+00:00",
+    "finished_at": "2026-11-01T21:58:42.192+00:00",
+    "sources_checked": [
+      "CU funding library",
+      "Grants.gov",
+      "Web search"
+    ],
+    "counts": {
+      "skip": 2,
+      "apply": 2,
+      "maybe": 4,
+      "failed": 0,
+      "members": 0
+    },
+    "status": "done",
+    "error": null
+  },
+  "log": [
+    {
+      "step": "Scan",
+      "message": "Started a funding scan for AI Club",
+      "created_at": "2026-11-01T21:57:07.574774+00:00"
+    },
+    {
+      "step": "Scout",
+      "message": "Planning a search for AI Club",
+      "created_at": "2026-11-01T21:57:07.630803+00:00"
+    },
+    {
+      "step": "Scout",
+      "message": "Searching Grants.gov for \"artificial intelligence education students\"",
+      "created_at": "2026-11-01T21:57:10.509788+00:00"
+    },
+    {
+      "step": "Scout",
+      "message": "Checked the FundScout funding library: 4 sources",
+      "created_at": "2026-11-01T21:57:10.563427+00:00"
+    },
+    {
+      "step": "Scout",
+      "message": "Searching the web: \"company sponsorship student AI club university 2026 grant funding hardware compute\"",
+      "created_at": "2026-11-01T21:57:34.171274+00:00"
+    },
+    {
+      "step": "Scout",
+      "message": "Searching the web: \"student organization AI club sponsorship program apply 2026 free AI tools for student clubs\"",
+      "created_at": "2026-11-01T21:57:34.231945+00:00"
+    },
+    {
+      "step": "Scout",
+      "message": "Results too thin (only 6 candidates (aim for 8 to 14)), searching again",
+      "created_at": "2026-11-01T21:57:34.282561+00:00"
+    },
+    {
+      "step": "Scout",
+      "message": "Searching the web: \"Colorado student club sponsorship AI technology company Boulder 2026\"",
+      "created_at": "2026-11-01T21:57:50.939944+00:00"
+    },
+    {
+      "step": "Scout",
+      "message": "Searching the web: \"iMasons AI Incubator students apply\"",
+      "created_at": "2026-11-01T21:57:50.998071+00:00"
+    },
+    {
+      "step": "Scout",
+      "message": "Results too thin (only 6 candidates (aim for 8 to 14)), searching again",
+      "created_at": "2026-11-01T21:57:51.047283+00:00"
+    },
+    {
+      "step": "Scout",
+      "message": "Passing 8 candidates to the Fit agent",
+      "created_at": "2026-11-01T21:58:03.033672+00:00"
+    },
+    {
+      "step": "Fit",
+      "message": "Reading the page for \"Arts & Sciences Student Government (ASSG) funding\"",
+      "created_at": "2026-11-01T21:58:11.101949+00:00"
+    },
+    {
+      "step": "Fit",
+      "message": "MAYBE (68): Arts & Sciences Student Government (ASSG) funding",
+      "created_at": "2026-11-01T21:58:11.16674+00:00"
+    },
+    {
+      "step": "Fit",
+      "message": "Reading the official Grants.gov listing for \"NSF FINDERS FOUNDRY\"",
+      "created_at": "2026-11-01T21:58:12.421347+00:00"
+    },
+    {
+      "step": "Fit",
+      "message": "Reading the page for \"CUSG SOAC: Travel funding\"",
+      "created_at": "2026-11-01T21:58:15.268111+00:00"
+    },
+    {
+      "step": "Fit",
+      "message": "MAYBE (40): CUSG SOAC: Travel funding",
+      "created_at": "2026-11-01T21:58:15.321937+00:00"
+    },
+    {
+      "step": "Fit",
+      "message": "SKIP (3): NSF FINDERS FOUNDRY",
+      "created_at": "2026-11-01T21:58:15.810879+00:00"
+    },
+    {
+      "step": "Fit",
+      "message": "Reading the official Grants.gov listing for \"IUSE / Professional Formation of Engineers: RED\"",
+      "created_at": "2026-11-01T21:58:16.442699+00:00"
+    },
+    {
+      "step": "Fit",
+      "message": "Reading the page for \"CUSG SOAC: Event funding\"",
+      "created_at": "2026-11-01T21:58:18.390565+00:00"
+    },
+    {
+      "step": "Fit",
+      "message": "APPLY (80): CUSG SOAC: Event funding",
+      "created_at": "2026-11-01T21:58:18.429312+00:00"
+    },
+    {
+      "step": "Fit",
+      "message": "Reading the page for \"CUSG SOAC: Operational funding\"",
+      "created_at": "2026-11-01T21:58:18.882426+00:00"
+    },
+    {
+      "step": "Fit",
+      "message": "APPLY (85): CUSG SOAC: Operational funding",
+      "created_at": "2026-11-01T21:58:18.91348+00:00"
+    },
+    {
+      "step": "Fit",
+      "message": "SKIP (2): IUSE / Professional Formation of Engineers: RED",
+      "created_at": "2026-11-01T21:58:19.626451+00:00"
+    },
+    {
+      "step": "Fit",
+      "message": "Reading the page for \"ALL Applied AI Network chapter program\"",
+      "created_at": "2026-11-01T21:58:28.350313+00:00"
+    },
+    {
+      "step": "Fit",
+      "message": "Reading the page for \"ALL Applied AI Network chapter program\"",
+      "created_at": "2026-11-01T21:58:28.35482+00:00"
+    },
+    {
+      "step": "Fit",
+      "message": "MAYBE (62): ALL Applied AI Network chapter program",
+      "created_at": "2026-11-01T21:58:28.389538+00:00"
+    },
+    {
+      "step": "Fit",
+      "message": "Reading the page for \"iMasons AI Incubator\"",
+      "created_at": "2026-11-01T21:58:42.119219+00:00"
+    },
+    {
+      "step": "Fit",
+      "message": "MAYBE (30): iMasons AI Incubator",
+      "created_at": "2026-11-01T21:58:42.180906+00:00"
+    },
+    {
+      "step": "Scan",
+      "message": "Done: 2 apply, 4 maybe, 2 skip",
+      "created_at": "2026-11-01T21:58:42.291211+00:00"
+    }
+  ],
+  "opportunities": [
+    {
+      "id": "f7fd5b87-03b9-4ca1-8dd6-073aac087f74",
+      "org_id": "64ebe371-b582-4ff2-b49f-23fcd6fc4041",
+      "scan_id": "5a8944f8-37eb-4d6e-9342-7bc72281b110",
+      "source": "library",
+      "library_id": "9c4b9e18-5465-4d5e-b8d1-86579f867432",
+      "title": "CUSG SOAC: Operational funding",
+      "provider": "CU Student Government (SOAC)",
+      "url": "https://www.colorado.edu/cusg/about-us/executive-branch/student-organization-allocations-committee",
+      "amount": "Part of per-year SOAC cap (about $1,000 new / $5,000 established RSOs); cap figures come from search, not confirmed on the page",
+      "deadline": "2027-02-24",
+      "deadline_verified": false,
+      "verdict": "apply",
+      "fit_score": 85,
+      "reasons": "The club is a registered CU Boulder RSO open to all students, and SOAC operational funding covers regular operating costs, which fits food and hardware. The fall priority deadline (Oct 14) has passed, but you can still submit on BuffConnect, and the last fall hearing is Nov 18, so meet your CSI liaison and submit now. If you miss it, the next priority deadline is Feb 24 (2027). Funds must be spent by May 1, and the page doesn't confirm the dollar caps or whether \"AI tools to give to students\" counts as organizational use.",
+      "eligibility_flags": [
+        "CU Boulder RSOs only",
+        "Must be open to all CU Boulder students",
+        "Priority deadline Oct 14 passed; late submissions possible",
+        "Must meet with CSI liaison first"
+      ],
+      "status": "new",
+      "created_at": "2026-11-01T21:58:18.87233+00:00",
+      "audience": "club"
+    },
+    {
+      "id": "a3bb657f-f03f-4b7e-bae0-435bdd66c8aa",
+      "org_id": "64ebe371-b582-4ff2-b49f-23fcd6fc4041",
+      "scan_id": "5a8944f8-37eb-4d6e-9342-7bc72281b110",
+      "source": "library",
+      "library_id": "80ab51dd-fdbe-48f4-94f5-585dc02c401f",
+      "title": "CUSG SOAC: Event funding",
+      "provider": "CU Student Government (SOAC)",
+      "url": "https://www.colorado.edu/cusg/about-us/executive-branch/student-organization-allocations-committee",
+      "amount": "Part of per-year SOAC cap (about $1,000 new / $5,000 established RSOs)",
+      "deadline": "2026-11-18",
+      "deadline_verified": false,
+      "verdict": "apply",
+      "fit_score": 80,
+      "reasons": "The club is a registered student organization open to all students, so it qualifies. SOAC funds events, operations (which can include food) and travel. The Oct 14 priority deadline has passed, but late requests are still accepted with no guaranteed hearing slot, and the last fall hearing is Nov 18. Submit on BuffConnect soon and meet your CSI liaison first. I couldn't confirm the dollar caps on the page, and AI tools or hardware may fit only under operations.",
+      "eligibility_flags": [
+        "CU Boulder RSOs only",
+        "Must be open to all students",
+        "Priority deadline (Oct 14) passed",
+        "Meet CSI liaison first"
+      ],
+      "status": "new",
+      "created_at": "2026-11-01T21:58:18.382378+00:00",
+      "audience": "club"
+    },
+    {
+      "id": "c55a3d30-3bf4-4611-a5ee-8263c7c12554",
+      "org_id": "64ebe371-b582-4ff2-b49f-23fcd6fc4041",
+      "scan_id": "5a8944f8-37eb-4d6e-9342-7bc72281b110",
+      "source": "library",
+      "library_id": "cd25cfca-c41c-4936-abc0-8673d6d5fb21",
+      "title": "Arts & Sciences Student Government (ASSG) funding",
+      "provider": "Arts & Sciences Student Government",
+      "url": "https://www.colorado.edu/studentgroups/assg/student-funding",
+      "amount": "Up to $1,000 per semester",
+      "deadline": null,
+      "deadline_verified": false,
+      "verdict": "maybe",
+      "fit_score": 68,
+      "reasons": "The club is a registered CU Boulder RSO, and ASSG gives up to $1,000 per semester through a funding hearing. The club's food, AI tools and hardware needs look like a fit, but I couldn't confirm whether ASSG covers those items. ASSG also only funds clubs affiliated with the Arts & Sciences College, and we don't know if the club is. Email csifinance@colorado.edu or the Center for Student Involvement to check, and the funding request form in BuffConnect has no stated deadline, so submit early.",
+      "eligibility_flags": [
+        "CU Boulder RSOs only",
+        "Requires Arts & Sciences affiliation (unconfirmed)",
+        "Deadline not stated",
+        "Must follow ASSG bylaws and Student Fee Regulations"
+      ],
+      "status": "new",
+      "created_at": "2026-11-01T21:58:11.110127+00:00",
+      "audience": "club"
+    },
+    {
+      "id": "8082980c-9e01-478b-a747-17e1751eddb9",
+      "org_id": "64ebe371-b582-4ff2-b49f-23fcd6fc4041",
+      "scan_id": "5a8944f8-37eb-4d6e-9342-7bc72281b110",
+      "source": "web",
+      "library_id": null,
+      "title": "ALL Applied AI Network chapter program",
+      "provider": "ALL Applied AI Network",
+      "url": "https://all-ai-network.org/",
+      "amount": null,
+      "deadline": null,
+      "deadline_verified": false,
+      "verdict": "maybe",
+      "fit_score": 62,
+      "reasons": "This is not a grant. It's a free chapter program with a dashboard, a sponsor portal, and a way to run reimbursements and payments. You can claim your existing club's chapter and keep your name. The network is run by a 501(c)(3), so the club doesn't need to be one. The club could use it to find sponsors for food, AI tools and hardware, but no dollar amounts are promised and I couldn't confirm how sponsor funding works.",
+      "eligibility_flags": [
+        "No grant amount stated",
+        "No deadline",
+        "Free to join; run by a 501(c)(3) (club need not be one)",
+        "Funding via sponsors, not guaranteed"
+      ],
+      "status": "new",
+      "created_at": "2026-11-01T21:58:28.343773+00:00",
+      "audience": "club"
+    },
+    {
+      "id": "dc9fd403-7863-46d9-a408-1e2e4edfecc8",
+      "org_id": "64ebe371-b582-4ff2-b49f-23fcd6fc4041",
+      "scan_id": "5a8944f8-37eb-4d6e-9342-7bc72281b110",
+      "source": "library",
+      "library_id": "bbacab88-eecd-4599-ac21-fed9702ea123",
+      "title": "CUSG SOAC: Travel funding",
+      "provider": "CU Student Government (SOAC)",
+      "url": "https://www.colorado.edu/cusg/about-us/executive-branch/student-organization-allocations-committee",
+      "amount": "Up to $5,000 per year",
+      "deadline": "2027-01-04",
+      "deadline_verified": false,
+      "verdict": "maybe",
+      "fit_score": 40,
+      "reasons": "The club is an RSO open to all students, so it can apply. But this fund covers only overnight trips over 60 miles (lodging, transport, registration fees), not food, AI tools or hardware, and the club has no trip planned. The next deadline is Jan 4, 2027 for March travel; apply only if officers plan a conference or competition trip. For food and hardware, SOAC's separate operations funding may fit better.",
+      "eligibility_flags": [
+        "CU Boulder RSOs only",
+        "Must be open to all students",
+        "Travel only: overnight, over 60 miles",
+        "No food while traveling",
+        "Travelers must be full fee-paying students",
+        "Equitable selection process required"
+      ],
+      "status": "new",
+      "created_at": "2026-11-01T21:58:15.274169+00:00",
+      "audience": "club"
+    },
+    {
+      "id": "e3901c01-4fc4-4927-ac93-74290e0386d2",
+      "org_id": "64ebe371-b582-4ff2-b49f-23fcd6fc4041",
+      "scan_id": "5a8944f8-37eb-4d6e-9342-7bc72281b110",
+      "source": "web",
+      "library_id": null,
+      "title": "iMasons AI Incubator",
+      "provider": "Infrastructure Masons (iMasons)",
+      "url": "https://imasons.org/ai-incubator/",
+      "amount": null,
+      "deadline": null,
+      "deadline_verified": false,
+      "verdict": "maybe",
+      "fit_score": 30,
+      "reasons": "This isn't a grant. It's a pilot marketplace where company sponsors pay (a rate sheet shows $5,000 to $150,000 a year) so students get cloud capacity, AI tools and GPU hours while working on company projects. The page gives no application process, deadline or cash award, and the only school it names is NYU. It could give members free AI tools and compute, so it's worth a quick email to iMasons, but it won't pay for food or hardware.",
+      "eligibility_flags": [
+        "Unclear eligibility",
+        "Not a grant",
+        "Sponsor-funded pilot",
+        "No deadline stated"
+      ],
+      "status": "new",
+      "created_at": "2026-11-01T21:58:42.123838+00:00",
+      "audience": "club"
+    },
+    {
+      "id": "68285d3d-3b16-4e2e-9f5f-74f72d7e8f9a",
+      "org_id": "64ebe371-b582-4ff2-b49f-23fcd6fc4041",
+      "scan_id": "5a8944f8-37eb-4d6e-9342-7bc72281b110",
+      "source": "grants_gov",
+      "library_id": null,
+      "title": "NSF FINDERS FOUNDRY",
+      "provider": "U.S. National Science Foundation",
+      "url": "https://www.grants.gov/search-results-detail/361604",
+      "amount": null,
+      "deadline": "2026-11-18",
+      "deadline_verified": false,
+      "verdict": "skip",
+      "fit_score": 3,
+      "reasons": "Only nonprofits, governments, universities (on behalf of faculty) and tribal nations can submit, so a student club can't apply. It also funds K-12 learning and workforce projects led by teams of educators, technologists and researchers, not club food, AI tools or hardware. Not worth pursuing.",
+      "eligibility_flags": [
+        "Institutions/nonprofits only",
+        "Student clubs not eligible",
+        "K-12 focus",
+        "Research team with PI required"
+      ],
+      "status": "new",
+      "created_at": "2026-11-01T21:58:15.764938+00:00",
+      "audience": "club"
+    },
+    {
+      "id": "3f36ef5d-66d7-4f7c-b5fc-defdb427da28",
+      "org_id": "64ebe371-b582-4ff2-b49f-23fcd6fc4041",
+      "scan_id": "5a8944f8-37eb-4d6e-9342-7bc72281b110",
+      "source": "grants_gov",
+      "library_id": null,
+      "title": "IUSE / Professional Formation of Engineers: RED",
+      "provider": "U.S. National Science Foundation",
+      "url": "https://www.grants.gov/search-results-detail/353413",
+      "amount": "$50,000 to $2,000,000",
+      "deadline": "2027-04-13",
+      "deadline_verified": false,
+      "verdict": "skip",
+      "fit_score": 2,
+      "reasons": "This NSF grant funds engineering department overhauls, and the lead applicant must be a Department Chair/Head (or a Dean or Provost). A student club can't apply, and it doesn't pay for food, AI tools or hardware. Skip it.",
+      "eligibility_flags": [
+        "PI must be Department Chair/Head",
+        "Not open to student clubs",
+        "Institutional change project"
+      ],
+      "status": "new",
+      "created_at": "2026-11-01T21:58:19.552974+00:00",
+      "audience": "club"
+    }
+  ],
+  "drafts": {
+    "f7fd5b87-03b9-4ca1-8dd6-073aac087f74": {
+      "id": "19e55f64-e67c-498d-a3e4-f8837117de1e",
+      "opportunity_id": "f7fd5b87-03b9-4ca1-8dd6-073aac087f74",
+      "draft_type": "cu_funding_request",
+      "content": "# AI Club: SOAC Operational Funding Request\n\n## Organization Overview\nAI Club is a registered student organization (RSO) at CU Boulder, founded about two years ago and open to all students. It has about 100 members. About 100 people attend meetings, and the email list has 800+ subscribers. The club brings in speakers to teach CU students and faculty about evolving technology, especially AI. It has had engagements with G2 and Techstars.\n\n## Purpose of Request\nWe are asking SOAC for operational funding for the regular operations that let us carry out our mission:\n1. **Food at regular member meetings.** [[MISSING: number of meetings planned and cost per meeting]]\n2. **Hardware for research time.** [[ASSUMED: The hardware will be used for organizational purposes and stored on campus.]] [[MISSING: specific hardware items, quantities and vendor quotes]]\n3. **AI tools for students.** [[ASSUMED: These are organizational resources, such as shared licenses, that members use through the club.]] [[MISSING: which tools, cost, and how access is distributed]]\n\n## Amount Requested\n[[MISSING: total amount requested. The target amount is unknown. Check the SOAC cap for an RSO of our age with your CSI liaison.]]\n\n## Budget\n| Item | Cost |\n|---|---|\n| Food | [[MISSING: cost]] |\n| Hardware | [[MISSING: cost]] |\n| AI tools | [[MISSING: cost]] |\n\n## Impact\nOperational funds would let the club keep hosting regular meetings for the roughly 100 students who attend. They would also give members the tools and hardware to work on AI. [[MISSING: expected number of students who benefit from the tools and hardware]]\n\n## Timeline\nOperational funds must be spent by May 1, 2027. After approval, we will hold a pre-spending meeting with CSI Finance. [[MISSING: spending schedule]]\n\n## Requirements checklist\n- [ ] RSO must be open to all CU Boulder students\n- [ ] Meet your assigned CSI liaison before submitting\n- [ ] Submit the request on BuffConnect\n- [ ] Fall priority deadline Oct 14 has passed. You can still submit, but SOAC cannot guarantee a hearing slot. The last fall hearing is Wed Nov 18, 2026\n- [ ] Next priority deadline is Wed Feb 24, 2027, for hearings through Mar 31 (the last hearing of the year). Dates are subject to change\n- [ ] Attend a SOAC funding hearing; review the SOAC Code and the hearing prep guide\n- [ ] Operational funds must be used for organizational (not personal) purposes and stored on campus where possible\n- [ ] Hold a pre-spending meeting with CSI Finance after approval\n- [ ] Spend all operational funds by Sat May 1, 2027; food requests do not carry over\n- [ ] The page does not list dollar caps. The $1,000 / $5,000 figures are unconfirmed",
+      "assumptions": [
+        "Food at meetings is assumed to be for regular member meetings (operational), not events open to the broader CU community.",
+        "Hardware is assumed to be stored on campus and used for organizational, not personal, purposes.",
+        "The club is assumed to be open to all CU Boulder students (profile says open to all students).",
+        "AI tools for students are assumed to possibly count as an organizational use; the page does not confirm this."
+      ],
+      "missing_items": [
+        "Number of meetings and food cost per meeting",
+        "Specific hardware items, quantities and quotes",
+        "Which AI tools, their cost and how they are distributed",
+        "Total amount requested (target unknown; SOAC cap not confirmed on page)",
+        "Budget line costs",
+        "Number of students who benefit",
+        "Spending schedule"
+      ],
+      "created_at": "2026-11-01T22:00:36.591341+00:00"
+    },
+    "a3bb657f-f03f-4b7e-bae0-435bdd66c8aa": {
+      "id": "7fc414c6-a977-4484-9399-7123a8d72c8b",
+      "opportunity_id": "a3bb657f-f03f-4b7e-bae0-435bdd66c8aa",
+      "draft_type": "cu_funding_request",
+      "content": "# AI Club – SOAC Event and Operations Funding Request\n\n## Organization\nAI Club is a registered student organization at CU Boulder, open to all students, founded about two years ago. It has 100 members and 800+ people on its email list. About 100 people attend regular meetings.\n\n## Mission and Purpose\nAI Club brings in speakers to teach CU students and faculty about evolving technology, especially AI. Industry connections include AI, software, G2 and Techstars. G2 and Techstars have both engaged with the club.\n\n## Funding Request\nTotal requested: [[MISSING: total dollar amount; the profile lists the target as unknown]]\n\nBecause SOAC funds operations and events, we plan to request:\n1. **Food at meetings and speaker events** (operations/events): [[MISSING: cost per meeting, number of meetings, and current SOAC food limit]]\n2. **AI tools for students** (operations): [[MISSING: which tools, cost, and how they would be distributed]] [[ASSUMED: this may qualify only as an operations request, and the tools would be organizational resources, not personal ones]]\n3. **Hardware for research time** (operations): [[MISSING: hardware list, cost, and where it will be stored on campus]]\n\n## Events and Campus Benefit\nOur speaker events teach students and faculty about AI. They are [[ASSUMED: free and open to all CU Boulder students]]. [[MISSING: upcoming event dates, speaker names, and expected attendance]]\n\n## Timeline\n- The Oct. 14 priority deadline has passed. Late requests are allowed, but SOAC cannot guarantee a hearing slot.\n- The last Fall 2026 hearing is Wed. Nov. 18. [[ASSUMED: we are aiming for that hearing]]\n- Operational funds must be spent by May 1.\n\n## Contact\n[[MISSING: officer name, contact email, and CSI liaison name]]\n\n## Requirements checklist\n- [ ] Must be a registered student organization open to all CU Boulder students\n- [ ] Meet with your assigned CSI liaison before submitting\n- [ ] Submit the event/operations request on BuffConnect\n- [ ] Priority deadline Oct 14 has passed; late requests are accepted but a hearing slot is not guaranteed\n- [ ] Last Fall 2026 SOAC hearing is Wed Nov 18; the next hearings are Spring 2027 (first is Jan 13)\n- [ ] Events must be outside regular meetings and invite people beyond the regular membership\n- [ ] Events must meet the 30-day deadline for event requests\n- [ ] Operational funds must be organizational, not personal, and stored on campus where possible\n- [ ] After approval, hold a pre-spending meeting with CSI Finance\n- [ ] Operational funds must be spent by May 1; food requests don't carry over\n- [ ] Review the SOAC Code and the hearing preparation guide\n- [ ] Deadlines are subject to change",
+      "assumptions": [
+        "Events will be free and open to all CU Boulder students",
+        "AI tools and hardware may qualify only as operations requests, and the tools would be organizational resources",
+        "Club is aiming for the Nov 18 hearing"
+      ],
+      "missing_items": [
+        "Total requested amount",
+        "Food cost, meeting count, and current SOAC food limit",
+        "AI tools: which tools, cost, and distribution plan",
+        "Hardware list, cost, and on-campus storage plan",
+        "Upcoming event dates, speaker names, and expected attendance",
+        "Officer contact details and CSI liaison name",
+        "Confirmation of SOAC dollar caps for new vs. established RSOs"
+      ],
+      "created_at": "2026-11-01T22:02:06.926536+00:00"
+    }
+  },
+  "draftLogs": {
+    "f7fd5b87-03b9-4ca1-8dd6-073aac087f74": [
+      {
+        "step": "Drafter",
+        "message": "Writing a draft for \"CUSG SOAC: Operational funding\"",
+        "created_at": "2026-11-01T22:00:04.47764+00:00"
+      },
+      {
+        "step": "Drafter",
+        "message": "Reading the requirements for \"CUSG SOAC: Operational funding\"",
+        "created_at": "2026-11-01T22:00:36.540458+00:00"
+      },
+      {
+        "step": "Drafter",
+        "message": "Draft ready for \"CUSG SOAC: Operational funding\": 4 assumptions and 7 missing items to check",
+        "created_at": "2026-11-01T22:00:36.649654+00:00"
+      }
+    ],
+    "a3bb657f-f03f-4b7e-bae0-435bdd66c8aa": [
+      {
+        "step": "Drafter",
+        "message": "Writing a draft for \"CUSG SOAC: Event funding\"",
+        "created_at": "2026-11-01T22:01:42.182023+00:00"
+      },
+      {
+        "step": "Drafter",
+        "message": "Reading the requirements for \"CUSG SOAC: Event funding\"",
+        "created_at": "2026-11-01T22:02:06.815097+00:00"
+      },
+      {
+        "step": "Drafter",
+        "message": "Draft ready for \"CUSG SOAC: Event funding\": 3 assumptions and 7 missing items to check",
+        "created_at": "2026-11-01T22:02:07.10578+00:00"
+      }
+    ]
+  }
+}

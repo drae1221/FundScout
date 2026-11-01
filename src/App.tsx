@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import Detail from "./Detail";
+import { DEMO_MODE, loadDemoRun, replay } from "./demo";
 
 interface Org {
   id: string;
@@ -70,8 +71,19 @@ export default function App() {
   const [activeScanId, setActiveScanId] = useState<string | null>(null); // set while a scan runs
   const [error, setError] = useState<string | null>(null);
   const logPanel = useRef<HTMLElement>(null);
+  const [demoSavedAt, setDemoSavedAt] = useState<string | null>(null);
 
   useEffect(() => {
+    if (DEMO_MODE) {
+      loadDemoRun()
+        .then((run) => {
+          setOrgs([run.org]);
+          setOrgId(run.org.id);
+          setDemoSavedAt(run.saved_at);
+        })
+        .catch((e) => setError(e.message));
+      return;
+    }
     getJson<Org[]>("/api/orgs")
       .then((list) => {
         setOrgs(list);
@@ -82,7 +94,7 @@ export default function App() {
 
   // Show the latest scan whenever the selected club changes.
   useEffect(() => {
-    if (!orgId) return;
+    if (!orgId || DEMO_MODE) return; // the demo starts with an empty board
     setActiveScanId(null);
     getJson<ScanData>(`/api/scan-status?org_id=${orgId}`)
       .then((d) => {
@@ -100,7 +112,7 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    if (!activeScanId) return;
+    if (!activeScanId || DEMO_MODE) return; // the demo replays from the saved file instead
     const timer = setInterval(() => poll(activeScanId).catch(() => {}), 1500);
     return () => clearInterval(timer);
   }, [activeScanId, poll]);
@@ -111,8 +123,29 @@ export default function App() {
     if (panel) panel.scrollTop = panel.scrollHeight;
   }, [data.log.length]);
 
+  async function replayDemo() {
+    const run = await loadDemoRun();
+    setData(EMPTY);
+    setActiveScanId(run.scan.id);
+    // A Fit verdict line ("APPLY (85): title") is when that card appears.
+    replay(run.log, (line, i) => {
+      const verdict = line.step === "Fit" && line.message.match(/^(?:APPLY|MAYBE|SKIP) \(\d+\): (.*)$/);
+      const card = verdict ? run.opportunities.find((o) => o.title === verdict[1]) : undefined;
+      setData((d) => ({
+        ...d,
+        log: [...d.log, line],
+        opportunities: card ? [...d.opportunities, card] : d.opportunities,
+      }));
+      if (i === run.log.length - 1) {
+        setData((d) => ({ ...d, scan: run.scan }));
+        setActiveScanId(null);
+      }
+    });
+  }
+
   async function findFunding() {
     setError(null);
+    if (DEMO_MODE) return replayDemo();
     const scanId = crypto.randomUUID();
     setData(EMPTY);
     setActiveScanId(scanId);
@@ -152,6 +185,12 @@ export default function App() {
         </div>
       </header>
 
+      {DEMO_MODE && (
+        <p className="demo-banner">
+          Cached demo run{demoSavedAt ? ` saved ${new Date(demoSavedAt).toLocaleString()}` : ""}: replaying a real
+          scan without calling the agents. <a href="/">Switch to live</a>
+        </p>
+      )}
       {error && <p className="error">{error}</p>}
       {data.scan?.status === "failed" && <p className="error">Scan failed: {data.scan.error}</p>}
 

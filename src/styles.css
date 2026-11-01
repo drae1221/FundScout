@@ -85,6 +85,14 @@ button:disabled {
   cursor: default;
 }
 
+.demo-banner {
+  background: #f1ead6;
+  border: 1px dashed var(--accent);
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+}
+
 .error {
   background: #fdecea;
   color: var(--verify);

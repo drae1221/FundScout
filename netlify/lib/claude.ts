@@ -16,6 +16,18 @@ interface AgentOptions {
   checkFinish?: (input: any) => string | null; // return a problem to send the answer back for another try
 }
 
+// The SDK already retries rate limits and server errors. We also saw a one-off empty 403
+// on a cold start, so give any failed call one more try after a short pause.
+async function withRetry<T>(call: () => Promise<T>): Promise<T> {
+  try {
+    return await call();
+  } catch (err) {
+    console.warn("Claude call failed, retrying once:", (err as Error).message);
+    await new Promise((r) => setTimeout(r, 1500));
+    return call();
+  }
+}
+
 // The agent loop: ask Claude, run the tools it picks, send results back, repeat
 // until it calls the finish tool.
 export async function runAgent<T>(opts: AgentOptions): Promise<T> {
@@ -24,7 +36,7 @@ export async function runAgent<T>(opts: AgentOptions): Promise<T> {
   let retries = 0;
 
   for (let turn = 0; turn < 15; turn++) {
-    const res = await anthropic.beta.messages.create({
+    const res = await withRetry(() => anthropic.beta.messages.create({
       model: MODEL,
       max_tokens: 16000,
       // If a safety check declines the request, the API retries it on a fallback model.
@@ -34,7 +46,7 @@ export async function runAgent<T>(opts: AgentOptions): Promise<T> {
       system: opts.system,
       tools: opts.tools,
       messages,
-    });
+    }));
     if (res.stop_reason === "refusal") throw new Error("Claude declined this request");
 
     for (const block of res.content) await opts.onBlock?.(block);
