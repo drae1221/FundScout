@@ -39,19 +39,21 @@ Look only for money for the organization itself: university student-government f
 How to work:
 - Start with query_funding_library. These are hand-checked sources; include each one the organization could plausibly use.
 - search_grants_gov searches federal grants, which nearly always require a 501(c)(3) or government entity. For a nonprofit, search it with a few relevant keywords. For a student club, run one search and always pass on the one or two most relevant results, even if they look out of reach, so the Fit agent can check eligibility and show the club why.
-- Use web_search for outside club funding. Cover these kinds, choosing the ones that suit the club:
-  - Campus or club programs run by companies in the club's field (for a tech or AI club: programs from AI and developer-tool companies that give university clubs credits, tools, event funding or speakers).
-  - College- or department-level funds at the club's university that the library doesn't list.
-  - Company sponsorships of student orgs, foundation grants for campus groups, and competitions or hackathon support.
-  Write specific queries that name the field, the student level and the year or location.
+- The library already covers campus funding, so spend your web searches on money from OUTSIDE the university. This is the most valuable part of your work: clubs already know their campus funds. Cover different kinds, choosing the ones that suit the club:
+  - Programs run by companies in the club's field for university clubs (for a tech or AI club: AI, cloud and developer-tool companies that give clubs credits, tools, event funding, swag or speakers).
+  - Foundation, nonprofit or professional-association grants open to student groups.
+  - Company sponsorship of student orgs, especially companies tied to the club or based in the club's city or state.
+  - Competitions, challenges or hackathons that a club team can enter for prize money.
+  - Local tech, startup or community organizations in the club's city or state that fund or sponsor student groups.
+  Write specific queries that name the field, the student level and the year or location. Never repeat a query: each search should target a different kind of source.
 - If results are thin, try different keywords before giving up.
-- You have about 8 tool calls in total, so plan them.
+- You have about 10 tool calls in total (up to 6 web searches), so plan them.
 
 Rules:
 - Only submit candidates whose URL appeared in a tool result. Never invent or guess a URL, amount or deadline. Leave amount null if no result stated one.
 - Leave out anything clearly expired, or clearly for a different field or a different school.
 - Prefer the official page of a specific program over list articles, blog roundups or social media posts.
-- Aim for 8 to 14 candidates: every library source the organization can use, the Grants.gov picks, and outside club funding such as sponsorships or awards. Set audience to "club" for every candidate. Give each one a single-sentence reason it might fit.
+- Aim for 8 to 14 candidates: every library source the organization can use, the Grants.gov picks, and at least 4 outside sources (from web search, not run by the university and not federal grants). Set audience to "club" for every candidate. Give each one a single-sentence reason it might fit.
 - Profile fields that say "[PLACEHOLDER: ...]" or "unknown" are not known yet. Do not treat them as facts.`;
 
 const TOOLS: Anthropic.Beta.BetaToolUnion[] = [
@@ -81,7 +83,7 @@ const TOOLS: Anthropic.Beta.BetaToolUnion[] = [
       additionalProperties: false,
     },
   },
-  { type: "web_search_20260209", name: "web_search", max_uses: 4 },
+  { type: "web_search_20260209", name: "web_search", max_uses: 6 },
   {
     name: "submit_candidates",
     description: "Submit your final list of candidate opportunities. Call this once, when you are done searching.",
@@ -116,6 +118,13 @@ const TOOLS: Anthropic.Beta.BetaToolUnion[] = [
 
 const decodeHtml = (s: string) =>
   s.replace(/&amp;/g, "&").replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&lt;/g, "<").replace(/&gt;/g, ">");
+const hostOf = (u: string) => {
+  try {
+    return new URL(u).hostname;
+  } catch {
+    return "";
+  }
+};
 const normalizeUrl = (u: string) => u.trim().replace(/\/+$/, "");
 
 export async function scout(org: Org, scanId: string): Promise<{ candidates: Candidate[]; sourcesChecked: string[] }> {
@@ -179,7 +188,10 @@ export async function scout(org: Org, scanId: string): Promise<{ candidates: Can
     // The Scout's own quality bar: send thin lists back for another pass.
     checkFinish: (input: { candidates: Candidate[] }) => {
       const problems = [];
+      // Outside sources: found on the web and not hosted by a university.
+      const outside = input.candidates.filter((c) => c.source === "web" && !/\.edu$/i.test(hostOf(c.url))).length;
       if (input.candidates.length < 7) problems.push(`only ${input.candidates.length} candidates (aim for 8 to 14)`);
+      if (outside < 4) problems.push(`only ${outside} outside sources (need at least 4 not run by the university)`);
       if (problems.length === 0) return null;
       void logStep(scanId, "Scout", `Results too thin (${problems.join(", ")}), searching again`);
       return `Not submitted: ${problems.join("; ")}. Add more from your earlier search results, or run another web search, then call submit_candidates again with the full list.`;
