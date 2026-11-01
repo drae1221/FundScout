@@ -34,14 +34,12 @@ export function describeOrg(org: Org): string {
 
 const SYSTEM = `You are the Scout agent in FundScout, a tool that finds funding for student clubs and small nonprofits. Your job is to find candidate opportunities for one organization and submit them with the submit_candidates tool.
 
-Look for two audiences:
-- club: money for the organization itself (university student-government funds, college or department funds, grants, corporate sponsorship of student orgs, awards).
-- members: opportunities that individual members could apply for and that match the club's focus: scholarships, conference or competition travel awards, student competitions with prizes, and company programs for students in the field. Prefer ones open to CU Boulder or Colorado students, or open nationally to undergraduates.
+Look only for money for the organization itself: university student-government funds, college or department funds, grants, corporate sponsorship of student orgs, and awards or competitions the club can enter as a group. Do not include scholarships or awards for individual students.
 
 How to work:
 - Start with query_funding_library. These are hand-checked sources; include each one the organization could plausibly use.
 - search_grants_gov searches federal grants, which nearly always require a 501(c)(3) or government entity. For a nonprofit, search it with a few relevant keywords. For a student club, run one search and always pass on the one or two most relevant results, even if they look out of reach, so the Fit agent can check eligibility and show the club why.
-- Use web_search for member opportunities and for outside club funding. Write specific queries that name the field, the student level and the year or location.
+- Use web_search for outside club funding such as company sponsorships of student orgs, foundation grants for campus groups, and industry programs that support student clubs in this field. Write specific queries that name the field, the student level and the year or location.
 - If results are thin, try different keywords before giving up.
 - You have about 8 tool calls in total, so plan them.
 
@@ -49,7 +47,7 @@ Rules:
 - Only submit candidates whose URL appeared in a tool result. Never invent or guess a URL, amount or deadline. Leave amount null if no result stated one.
 - Leave out anything clearly expired, or clearly for a different field or a different school.
 - Prefer the official page of a specific program over list articles, blog roundups or social media posts.
-- Aim for 10 to 16 candidates: every library source the organization can use, the Grants.gov picks, outside club funding such as sponsorships or awards, and at least 4 member opportunities. Give each one a single-sentence reason it might fit.
+- Aim for 8 to 14 candidates: every library source the organization can use, the Grants.gov picks, and outside club funding such as sponsorships or awards. Set audience to "club" for every candidate. Give each one a single-sentence reason it might fit.
 - Profile fields that say "[PLACEHOLDER: ...]" or "unknown" are not known yet. Do not treat them as facts.`;
 
 const TOOLS: Anthropic.Beta.BetaToolUnion[] = [
@@ -176,10 +174,8 @@ export async function scout(org: Org, scanId: string): Promise<{ candidates: Can
     },
     // The Scout's own quality bar: send thin lists back for another pass.
     checkFinish: (input: { candidates: Candidate[] }) => {
-      const members = input.candidates.filter((c) => c.audience === "members").length;
       const problems = [];
-      if (input.candidates.length < 8) problems.push(`only ${input.candidates.length} candidates (aim for 10 to 16)`);
-      if (members < 4) problems.push(`only ${members} member opportunities (need at least 4)`);
+      if (input.candidates.length < 7) problems.push(`only ${input.candidates.length} candidates (aim for 8 to 14)`);
       if (problems.length === 0) return null;
       void logStep(scanId, "Scout", `Results too thin (${problems.join(", ")}), searching again`);
       return `Not submitted: ${problems.join("; ")}. Add more from your earlier search results, or run another web search, then call submit_candidates again with the full list.`;
@@ -188,6 +184,7 @@ export async function scout(org: Org, scanId: string): Promise<{ candidates: Can
 
   const unique = new Map<string, Candidate>();
   for (const c of result.candidates) {
+    c.audience = "club"; // member scholarships are turned off for now
     if (c.source !== "library" || !c.library_id) c.library_id = null;
     // Library entries always link to the stored official page.
     if (c.source === "library" && c.library_id && libraryUrls.has(c.library_id)) c.url = libraryUrls.get(c.library_id)!;

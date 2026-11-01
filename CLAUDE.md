@@ -176,8 +176,8 @@ Clean, simple, readable. Works on a laptop projector.
 
 ### Demo orgs
 - **AI Club** (primary demo org) — CU Boulder RSO, not 501(c)(3), industry ties: AI, software
-- **Leeds Investment & Trading Group** — finance, trading
-- **Beta Alpha Psi** — accounting
+- **LCG** — consulting for small companies and nonprofits
+- **Young Life** — student ministry, community events and retreats
 - One sample **small Boulder nonprofit** (for testing the Skip-vs-Apply difference)
 
 Fill in real details from the club officers; use clear placeholders until then.
@@ -189,7 +189,7 @@ Fill in real details from the club officers; use clear placeholders until then.
 - Arts & Sciences Student Government — up to $1,000/semester for eligible A&S-affiliated RSOs via a funding hearing
 - Leeds School of Business student government / school funding — TODO: confirm if it exists
 - Department funds relevant to each club — TODO
-- Beta Alpha Psi national chapter awards/funding — TODO: confirm
+- Young Life national / regional funding for college chapters — TODO: confirm
 - Colorado community foundation grants — TODO
 - Corporate sponsors: companies on the CU career fair employer list, matched by industry — TODO: build list
 - Student competitions / conference travel scholarships — TODO

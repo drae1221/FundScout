@@ -112,7 +112,6 @@ export default function App() {
 
   const running = activeScanId !== null;
   const club = data.opportunities.filter((o) => o.audience === "club");
-  const members = data.opportunities.filter((o) => o.audience === "members" && o.verdict !== "skip");
 
   return (
     <div className="app">
@@ -155,19 +154,6 @@ export default function App() {
                 </div>
               );
             })}
-          </div>
-
-          <div className="members">
-            <h2>
-              For members <span className="count">{members.length}</span>
-            </h2>
-            <p className="hint">Scholarships, travel awards and competitions your members can apply for. Share these with the club.</p>
-            <div className="member-grid">
-              {members.map((o) => (
-                <OpportunityCard key={o.id} o={o} showVerdict />
-              ))}
-            </div>
-            {members.length === 0 && <p className="empty">{running ? "Waiting for results…" : "Nothing here yet."}</p>}
           </div>
         </section>
 

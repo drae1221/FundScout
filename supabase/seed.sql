@@ -1,5 +1,5 @@
 -- FundScout seed data (spec section 8). Run AFTER schema.sql, in the Supabase SQL Editor.
--- Anything in [PLACEHOLDER: ...] needs real details from the club officers.
+-- Club profiles come from officer answers (Nov 1, 2026). Target amounts are still unknown.
 
 delete from activity_log; delete from drafts; delete from opportunities; delete from scans;
 delete from funding_library; delete from orgs;
@@ -9,25 +9,31 @@ insert into orgs (name, type, university, member_count, is_registered_student_or
                   has_nonprofit_partner, mission, activities, funding_goals, target_amount,
                   past_wins, industry_ties, funding_contacts) values
 (
-  'AI Club', 'student_club', 'CU Boulder', null, true, false, false,
-  '[PLACEHOLDER: AI Club mission statement]',
-  '[PLACEHOLDER: weekly meetings, workshops, hackathons, speaker events]',
-  '[PLACEHOLDER: e.g. host a campus AI hackathon; send members to a conference]',
+  'AI Club', 'student_club', 'CU Boulder', 100, true, false, false,
+  'Brings in speakers to teach CU students and faculty about evolving technology, especially AI. Open to all students; founded about 2 years ago.',
+  'Speaker events and regular meetings (about 100 attend meetings; 800+ on the email list).',
+  'Food at meetings, AI tools to give to students, and hardware for research time.',
   null,
-  '[PLACEHOLDER: past events, attendance numbers, competition results]',
-  '{AI,software}', '{treasurer-aiclub@example.com}'
+  'Landed G2 and Techstars for engagements with the club. Officers describe it as the biggest club at CU.',
+  '{AI,software,G2,Techstars}', '{treasurer-aiclub@example.com}'
 ),
 (
-  'Leeds Investment & Trading Group', 'student_club', 'CU Boulder', null, true, false, false,
-  '[PLACEHOLDER: mission]', '[PLACEHOLDER: activities]', '[PLACEHOLDER: funding goals]', null,
-  '[PLACEHOLDER: past wins]',
-  '{finance,trading}', '{treasurer-litg@example.com}'
+  'LCG', 'student_club', 'CU Boulder', 60, true, false, false,
+  'Educates students and prepares them to do consulting projects for small companies and nonprofits. Open to all students; started about 2019.',
+  'Consulting training, client projects for small companies and nonprofits, campus case competitions, and events with large consulting firms. About 60 active members and 300-400 alumni.',
+  'Software for students, food for students, and campus competition events.',
+  null,
+  'Hosts the Rocky Mountain Case Competition (about 50 participants) and an event where big firms come in to talk to students.',
+  '{consulting,business}', '{treasurer-lcg@example.com}'
 ),
 (
-  'Beta Alpha Psi', 'student_club', 'CU Boulder', null, true, false, false,
-  '[PLACEHOLDER: mission]', '[PLACEHOLDER: activities]', '[PLACEHOLDER: funding goals]', null,
-  '[PLACEHOLDER: past wins]',
-  '{accounting}', '{treasurer-bap@example.com}'
+  'Young Life', 'student_club', 'CU Boulder', 100, true, false, false,
+  'Student ministry that hosts community-building events to bring CU students together. Open to all students.',
+  'Weekly meetings (about 100 attend; about 1,000 on the email list), community events, travel events, and retreat weekends.',
+  'Food, events, travel events, and retreat lodging.',
+  null,
+  'Brought 150 people to a retreat weekend.',
+  '{ministry,community}', '{treasurer-younglife@example.com}'
 ),
 (
   -- Fictional test org: used to check that 501(c)(3)-only grants become Apply here but Skip for clubs.
@@ -81,7 +87,7 @@ insert into funding_library (name, provider, type, funding_category, eligibility
 -- because the Scout agent treats this library as trusted.
 --   • Leeds School of Business student government / school funding
 --   • Department funds relevant to each club
---   • Beta Alpha Psi national chapter awards/funding
+--   • Young Life national / regional funding for college chapters
 --   • Colorado community foundation grants (good 501(c)(3)-only test case)
 --   • Corporate sponsors from the CU career fair employer list
 --   • Student competitions / conference travel scholarships
