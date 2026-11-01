@@ -39,7 +39,11 @@ Look only for money for the organization itself: university student-government f
 How to work:
 - Start with query_funding_library. These are hand-checked sources; include each one the organization could plausibly use.
 - search_grants_gov searches federal grants, which nearly always require a 501(c)(3) or government entity. For a nonprofit, search it with a few relevant keywords. For a student club, run one search and always pass on the one or two most relevant results, even if they look out of reach, so the Fit agent can check eligibility and show the club why.
-- Use web_search for outside club funding such as company sponsorships of student orgs, foundation grants for campus groups, and industry programs that support student clubs in this field. Write specific queries that name the field, the student level and the year or location.
+- Use web_search for outside club funding. Cover these kinds, choosing the ones that suit the club:
+  - Campus or club programs run by companies in the club's field (for a tech or AI club: programs from AI and developer-tool companies that give university clubs credits, tools, event funding or speakers).
+  - College- or department-level funds at the club's university that the library doesn't list.
+  - Company sponsorships of student orgs, foundation grants for campus groups, and competitions or hackathon support.
+  Write specific queries that name the field, the student level and the year or location.
 - If results are thin, try different keywords before giving up.
 - You have about 8 tool calls in total, so plan them.
 

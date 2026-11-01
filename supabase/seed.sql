@@ -81,12 +81,20 @@ insert into funding_library (name, provider, type, funding_category, eligibility
   'Up to $1,000 per semester.',
   'ASSG updated its procedures for 2026; see the Student Funding Logistics & Deadlines document on the page.',
   'https://www.colorado.edu/studentgroups/assg/student-funding'
+),
+(
+  'Engineering Excellence Fund (EEF)', 'CU Boulder College of Engineering and Applied Science (student-run committee)',
+  'university', 'general',
+  'Student-run fund paid for by engineering student fees. Funds projects in the College of Engineering and Applied Science: CU engineering teams, senior projects, lab upgrades, class development and engineering projects for society. Past recipients include student groups such as Engineers Without Borders and the Colorado Boulder Rocketry Association. The page does not say whether non-engineering RSOs can apply.',
+  'Not stated per award; the committee awards more than $500,000 a year in total.',
+  'Fall and Spring proposal cycles; dates are on the Funding Timeline page.',
+  'https://www.colorado.edu/program/eef/about-fund'
 );
 
 -- TODO (spec section 8): add these once confirmed on an official page. Do not seed guesses,
 -- because the Scout agent treats this library as trusted.
 --   • Leeds School of Business student government / school funding
---   • Department funds relevant to each club
+--   • Department funds relevant to each club (EEF added Nov 1; CU Engineering Council: ucec@colorado.edu)
 --   • Young Life national / regional funding for college chapters
 --   • Colorado community foundation grants (good 501(c)(3)-only test case)
 --   • Corporate sponsors from the CU career fair employer list
