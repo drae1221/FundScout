@@ -166,7 +166,7 @@ export async function scout(org: Org, scanId: string): Promise<{ candidates: Can
       if (block.type === "server_tool_use" && block.name === "web_search") {
         sourcesChecked.add("Web search");
         const query = (block.input as { query?: string }).query;
-        await logStep(scanId, "Scout", `Searching the web: "${query}"`);
+        if (query) await logStep(scanId, "Scout", `Searching the web: "${query}"`);
       }
       if (block.type === "web_search_tool_result" && Array.isArray(block.content)) {
         block.content.forEach((r) => seenUrls.add(normalizeUrl(r.url)));
