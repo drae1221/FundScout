@@ -138,15 +138,15 @@ export default function Detail({ id }: { id: string }) {
     <div className="app detail">
       <a href="#/" className="back">← Back to pipeline</a>
 
-      <header className="detail-head">
+      <header className={`detail-head detail-${o.verdict}`}>
         <div>
           <p className="provider">{data.org?.name} · {o.provider}</p>
           <h1 className="detail-title">{o.title}</h1>
-          <p className="meta">
+          <p className="chips">
             <span className={`badge badge-${o.verdict}`}>{o.verdict}</span>
-            <span>Fit score {o.fit_score}</span>
-            {o.amount && <span>{o.amount}</span>}
-            <span>Status: {STATUS_LABELS[o.status]}</span>
+            <span className="chip">Fit score <b>{o.fit_score}</b></span>
+            {o.amount && <span className="chip">{o.amount}</span>}
+            <span className="chip">Status: <b>{STATUS_LABELS[o.status]}</b></span>
           </p>
         </div>
         <div className="controls">
@@ -180,7 +180,11 @@ export default function Detail({ id }: { id: string }) {
             <button onClick={() => update({ deadline_verified: true })}>I checked the deadline on the source</button>
           )}
           <h2>Original source</h2>
-          <p><a href={o.url} target="_blank" rel="noreferrer">{o.url} ↗</a></p>
+          <p>
+            <a href={o.url} target="_blank" rel="noreferrer" className="source-link" title={o.url}>
+              {o.url.replace(/^https?:\/\/(www\.)?/, "")} ↗
+            </a>
+          </p>
           <p className="hint">FundScout never submits anything. You review the draft and submit it yourself.</p>
         </section>
 
@@ -200,7 +204,10 @@ export default function Detail({ id }: { id: string }) {
           )}
 
           {!d && !drafting && (
-            <p className="empty">No draft yet. The Drafter agent reads the source page and writes a first draft using only your club profile.</p>
+            <div className="draft-empty">
+              <p className="draft-empty-title">No draft yet</p>
+              <p>The Drafter agent reads the source page and writes a first draft using only your club profile. Anything it guesses is highlighted for you to check.</p>
+            </div>
           )}
 
           {d && (

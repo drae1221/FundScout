@@ -38,9 +38,9 @@ interface ScanData {
 
 const EMPTY: ScanData = { scan: null, log: [], opportunities: [] };
 const VERDICTS = [
-  { key: "apply", label: "Apply" },
-  { key: "maybe", label: "Maybe" },
-  { key: "skip", label: "Skip" },
+  { key: "apply", label: "Apply", hint: "Worth pursuing" },
+  { key: "maybe", label: "Maybe", hint: "Check a detail first" },
+  { key: "skip", label: "Skip", hint: "Not a fit, and why" },
 ] as const;
 
 async function getJson<T>(url: string): Promise<T> {
@@ -189,9 +189,12 @@ export default function App() {
   return (
     <div className="app">
       <header className="topbar">
-        <div>
-          <h1>FundScout</h1>
-          <p className="tagline">Finds the funding your club didn't know existed.</p>
+        <div className="brand">
+          <span className="logo" aria-hidden="true">$</span>
+          <div>
+            <h1>FundScout</h1>
+            <p className="tagline">Finds the funding your club didn't know existed.</p>
+          </div>
         </div>
         <div className="controls">
           <select value={orgId} onChange={(e) => setOrgId(e.target.value)} disabled={running} aria-label="Club">
@@ -218,19 +221,33 @@ export default function App() {
           scan without calling the agents. <a href="/">Switch to live</a>
         </p>
       )}
+      {(running || data.scan) && (
+        <div className="summary">
+          <span className={`pill ${running ? "pill-live" : "pill-done"}`}>{running ? "Scanning" : "Last scan"}</span>
+          <span>
+            <b>{club.length}</b> opportunities checked · <b>{club.filter((o) => o.verdict === "apply").length}</b> worth applying
+          </span>
+          {data.scan?.sources_checked?.length ? (
+            <span className="summary-sources">Sources: {data.scan.sources_checked.join(" · ")}</span>
+          ) : null}
+        </div>
+      )}
       {error && <p className="error">{error}</p>}
       {data.scan?.status === "failed" && <p className="error">Scan failed: {data.scan.error}</p>}
 
       <main className="layout">
         <section>
           <div className="columns">
-            {VERDICTS.map(({ key, label }) => {
+            {VERDICTS.map(({ key, label, hint }) => {
               const items = club.filter((o) => o.verdict === key);
               return (
                 <div key={key} className={`column column-${key}`}>
-                  <h2>
-                    {label} <span className="count">{items.length}</span>
-                  </h2>
+                  <div className="column-head">
+                    <h2>
+                      <span className="dot" /> {label} <span className="count">{items.length}</span>
+                    </h2>
+                    <p>{hint}</p>
+                  </div>
                   {items.map((o) => (
                     <OpportunityCard key={o.id} o={o} />
                   ))}
@@ -242,11 +259,13 @@ export default function App() {
         </section>
 
         <aside className="log" ref={logPanel}>
-          <h2>Activity</h2>
+          <h2>
+            Agent activity {running && <span className="live-dot" title="Live" />}
+          </h2>
           {data.log.length === 0 && <p className="empty">{running ? "Starting…" : "Click “Find funding” to start a scan."}</p>}
           <ol>
             {data.log.map((l, i) => (
-              <li key={i}>
+              <li key={i} className={/^Reading /.test(l.message) ? "quiet" : undefined}>
                 <span className={`step step-${l.step.toLowerCase()}`}>{l.step}</span> {l.message}
               </li>
             ))}
@@ -262,40 +281,52 @@ export default function App() {
 
 const STATUS_BADGES = { in_progress: "in progress", submitted: "submitted", dismissed: "dismissed" };
 
+const MAX_FLAGS = 3;
+
 function OpportunityCard({ o }: { o: Opportunity }) {
+  const extraFlags = o.eligibility_flags.length - MAX_FLAGS;
   return (
-    <article className={`card${o.status === "dismissed" ? " card-dismissed" : ""}`}>
+    <article className={`card card-${o.verdict}${o.status === "dismissed" ? " card-dismissed" : ""}`}>
       <div className="card-head">
-        <a href={`#/opportunity/${o.id}`} className="card-title">
-          {o.title}
-        </a>
-        <span className="score" title="Fit score">
+        <div>
+          <a href={`#/opportunity/${o.id}`} className="card-title">
+            {o.title}
+          </a>
+          {o.provider && <p className="provider">{o.provider}</p>}
+        </div>
+        <span className={`score score-${o.verdict}`} title="Fit score (0-100)">
           {o.fit_score}
         </span>
       </div>
-      {o.provider && <p className="provider">{o.provider}</p>}
-      <p className="meta">
+      <div className="meta">
         {o.status !== "new" && <span className="badge badge-status">{STATUS_BADGES[o.status]}</span>}
-        {o.amount && <span>{o.amount}</span>}
-        <span>
+        {o.amount && (
+          <span className="amount" title={o.amount}>
+            {o.amount}
+          </span>
+        )}
+        <span className="deadline">
           Deadline: {o.deadline ?? "see source"}
           {!o.deadline_verified && <span className="badge badge-verify">verify on source</span>}
         </span>
-      </p>
+      </div>
       <p className="reason">{o.reasons}</p>
-      <p className="card-links">
-        <a href={`#/opportunity/${o.id}`}>{o.verdict === "apply" ? "Open & draft →" : "Details →"}</a>
-        <a href={o.url} target="_blank" rel="noreferrer">Source ↗</a>
-      </p>
       {o.eligibility_flags.length > 0 && (
         <p className="flags">
-          {o.eligibility_flags.map((f) => (
+          {o.eligibility_flags.slice(0, MAX_FLAGS).map((f) => (
             <span key={f} className="flag">
               {f}
             </span>
           ))}
+          {extraFlags > 0 && <span className="flag flag-more">+{extraFlags} more</span>}
         </p>
       )}
+      <p className="card-links">
+        <a href={`#/opportunity/${o.id}`}>{o.verdict === "apply" ? "Open & draft →" : "Details →"}</a>
+        <a href={o.url} target="_blank" rel="noreferrer">
+          Source ↗
+        </a>
+      </p>
     </article>
   );
 }
