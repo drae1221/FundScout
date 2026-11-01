@@ -131,6 +131,7 @@ export async function scout(org: Org, scanId: string): Promise<{ candidates: Can
   const seenUrls = new Set<string>(); // guardrail: every candidate URL must come from a real result
   const libraryUrls = new Map<string, string>();
   const sourcesChecked = new Set<string>();
+  const loggedQueries = new Set<string>();
 
   const handlers = {
     query_funding_library: async (input: { category: string | null; audience: string | null }) => {
@@ -179,7 +180,11 @@ export async function scout(org: Org, scanId: string): Promise<{ candidates: Can
       if (block.type === "server_tool_use" && block.name === "web_search") {
         sourcesChecked.add("Web search");
         const query = (block.input as { query?: string }).query;
-        if (query) await logStep(scanId, "Scout", `Searching the web: "${query}"`);
+        // A reply can list the same search more than once; log each query once.
+        if (query && !loggedQueries.has(query)) {
+          loggedQueries.add(query);
+          await logStep(scanId, "Scout", `Searching the web: "${query}"`);
+        }
       }
       if (block.type === "web_search_tool_result" && Array.isArray(block.content)) {
         block.content.forEach((r) => seenUrls.add(normalizeUrl(r.url)));

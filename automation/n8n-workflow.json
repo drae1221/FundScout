@@ -45,7 +45,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Step 1: keep only new Apply matches, and make one calendar item per deadline\n// (the deadline itself + a reminder two weeks before).\nconst body = $input.first().json.body;\nconst log = (message) => this.helpers.httpRequest({ method: 'POST', url: body.log_url, json: true, body: { scan_id: body.scan_id, message } });\n\nconst matches = (body.apply_opportunities || []);\nawait log(`n8n received ${matches.length} Apply matches for ${body.org_name}`);\n\nconst items = [];\nfor (const m of matches) {\n  if (!m.deadline) continue;\n  const due = new Date(m.deadline + 'T09:00:00');\n  const remind = new Date(due.getTime() - 14 * 24 * 3600 * 1000);\n  const end = (d) => new Date(d.getTime() + 30 * 60 * 1000).toISOString();\n  const description = `${m.provider || ''}\\nAmount: ${m.amount || 'see source'}\\nSource: ${m.url}\\nOpen in FundScout: ${m.app_link}\\n\\nDeadline found by FundScout: verify it on the source before relying on it.`;\n  items.push({ json: { summary: `DUE: ${m.title}`, start: due.toISOString(), end: end(due), description } });\n  if (remind > new Date()) items.push({ json: { summary: `Start application (due in 2 weeks): ${m.title}`, start: remind.toISOString(), end: end(remind), description } });\n}\nif (items.length === 0) {\n  await log('No Apply matches have a stated deadline, so no calendar events this week');\n  return [{ json: { skip: true } }]; // keeps the flow going so the email still sends\n}\nreturn items;"
+        "jsCode": "// Step 1: keep only new Apply matches, and make one calendar item per deadline\n// (the deadline itself + a reminder two weeks before).\nconst body = $input.first().json.body;\nconst log = (message) => this.helpers.httpRequest({ method: 'POST', url: body.log_url, json: true, body: { scan_id: body.scan_id, message } });\n\nconst matches = body.apply_opportunities || [];\nawait log(`n8n received ${matches.length} Apply ${matches.length === 1 ? 'match' : 'matches'} for ${body.org_name}`);\n\nconst items = [];\nfor (const m of matches) {\n  if (!m.deadline) continue;\n  const due = new Date(m.deadline + 'T09:00:00');\n  const remind = new Date(due.getTime() - 14 * 24 * 3600 * 1000);\n  const end = (d) => new Date(d.getTime() + 30 * 60 * 1000).toISOString();\n  const description = `${m.provider || ''}\\nAmount: ${m.amount || 'see source'}\\nSource: ${m.url}\\nOpen in FundScout: ${m.app_link}\\n\\nDeadline found by FundScout: verify it on the source before relying on it.`;\n  items.push({ json: { summary: `DUE: ${m.title}`, start: due.toISOString(), end: end(due), description } });\n  if (remind > new Date()) items.push({ json: { summary: `Start application (due in 2 weeks): ${m.title}`, start: remind.toISOString(), end: end(remind), description } });\n}\n// No deadlines: pass one marker item so the \"Any deadlines?\" check sends the flow straight to the email.\nreturn items.length ? items : [{ json: { noDeadlines: true } }];"
       },
       "id": "a1f0c6b2-0003-4c3e-9a10-000000000003",
       "name": "1. Filter new Apply matches",
@@ -77,24 +77,22 @@
       "type": "n8n-nodes-base.googleCalendar",
       "typeVersion": 1.3,
       "position": [
-        480,
-        300
+        660,
+        200
       ],
-      "alwaysOutputData": true,
-      "onError": "continueRegularOutput",
-      "notes": "Items with skip: true have no date; this step fails on them and passes them on (On Error: continue)."
+      "onError": "continueRegularOutput"
     },
     {
       "parameters": {
         "mode": "runOnceForAllItems",
-        "jsCode": "// Step 3: build the digest email.\nconst body = $('Scan finished (webhook)').first().json.body;\nconst log = (message) => this.helpers.httpRequest({ method: 'POST', url: body.log_url, json: true, body: { scan_id: body.scan_id, message } });\n\nconst created = $input.all().filter((i) => i.json && i.json.id && !i.json.error).length;\nif (created) await log(`Added ${created} events to the calendar (deadlines + 2-week reminders)`);\n\n// Demo: digest goes to real addresses only. Put your own email here if the club's contacts are placeholders.\nconst FALLBACK_TO = 'PUT_YOUR_EMAIL_HERE';\nconst real = (body.funding_contacts || []).filter((e) => !e.endsWith('@example.com'));\nconst to = (real.length ? real : [FALLBACK_TO]).join(',');\n\nconst rows = (body.apply_opportunities || []).map((m) => `<li><b><a href=\"${m.app_link}\">${m.title}</a></b> (${m.provider || ''})<br>Amount: ${m.amount || 'see source'} \u00b7 Deadline: ${m.deadline || 'see source'} <i>(verify on source)</i> \u00b7 <a href=\"${m.url}\">original source</a></li>`).join('');\nconst html = `<h2>FundScout weekly digest: ${body.org_name}</h2><p>Top matches worth applying for this week:</p><ul>${rows || '<li>No new Apply matches this week.</li>'}</ul><p style=\"color:#666\">Sources checked this week: ${(body.sources_checked || []).join(', ')}.</p><p style=\"color:#666\">FundScout never submits anything. Review each draft and submit it yourself.</p>`;\nreturn [{ json: { to, subject: `FundScout: ${(body.apply_opportunities || []).length} funding matches for ${body.org_name}`, html } }];"
+        "jsCode": "// Step 3: report the calendar result, then build the digest email.\nconst body = $('Scan finished (webhook)').first().json.body;\nconst log = (message) => this.helpers.httpRequest({ method: 'POST', url: body.log_url, json: true, body: { scan_id: body.scan_id, message } });\nconst events = (n) => `${n} ${n === 1 ? 'event' : 'events'}`;\n\n// The calendar step only runs when there are deadlines; count what it really created.\nlet created = 0, failed = 0;\ntry {\n  const results = $('2. Add deadlines to calendar').all();\n  created = results.filter((i) => i.json && i.json.id && !i.json.error).length;\n  failed = results.length - created;\n} catch (e) {\n  // Calendar step didn't run this time.\n}\nif (created === 0 && failed === 0) await log('No Apply matches have a stated deadline, so no calendar events this week');\nif (created) await log(`Added ${events(created)} to the calendar (deadlines + 2-week reminders)`);\nif (failed) await log(`Couldn't add ${events(failed)} to the calendar`);\n\n// Demo: digest goes to real addresses only. Put your own email here if the club's contacts are placeholders.\nconst FALLBACK_TO = 'PUT_YOUR_EMAIL_HERE';\nconst real = (body.funding_contacts || []).filter((e) => !e.endsWith('@example.com'));\nconst to = (real.length ? real : [FALLBACK_TO]).join(',');\n\nconst matches = body.apply_opportunities || [];\nconst rows = matches.map((m) => `<li><b><a href=\"${m.app_link}\">${m.title}</a></b> (${m.provider || ''})<br>Amount: ${m.amount || 'see source'} \u00b7 Deadline: ${m.deadline || 'see source'} <i>(verify on source)</i> \u00b7 <a href=\"${m.url}\">original source</a></li>`).join('');\nconst html = `<h2>FundScout weekly digest: ${body.org_name}</h2><p>Top matches worth applying for this week:</p><ul>${rows || '<li>No new Apply matches this week.</li>'}</ul><p style=\"color:#666\">Sources checked this week: ${(body.sources_checked || []).join(', ')}.</p><p style=\"color:#666\">FundScout never submits anything. Review each draft and submit it yourself.</p>`;\nconst subject = `FundScout: ${matches.length} funding ${matches.length === 1 ? 'match' : 'matches'} for ${body.org_name}`;\nreturn [{ json: { to, subject, html } }];"
       },
       "id": "a1f0c6b2-0005-4c3e-9a10-000000000005",
       "name": "3. Build digest email",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        720,
+        880,
         300
       ]
     },
@@ -113,7 +111,7 @@
       "type": "n8n-nodes-base.gmail",
       "typeVersion": 2.1,
       "position": [
-        960,
+        1100,
         300
       ]
     },
@@ -126,9 +124,43 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1200,
+        1320,
         300
       ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "b7e1c2d4-0000-4000-8000-000000000001",
+              "leftValue": "={{ $json.noDeadlines !== true }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "a1f0c6b2-0008-4c3e-9a10-000000000008",
+      "name": "Any deadlines?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        440,
+        300
+      ],
+      "notes": "true = there are deadlines, add them to the calendar. false = skip straight to the email."
     }
   ],
   "connections": {
@@ -147,7 +179,25 @@
       "main": [
         [
           {
+            "node": "Any deadlines?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Any deadlines?": {
+      "main": [
+        [
+          {
             "node": "2. Add deadlines to calendar",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "3. Build digest email",
             "type": "main",
             "index": 0
           }
