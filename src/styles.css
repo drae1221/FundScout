@@ -213,24 +213,9 @@ button:disabled {
   font-size: 0.8rem;
 }
 
-.members {
-  margin-top: 28px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-left: 5px solid var(--accent);
-  border-radius: 12px;
-  padding: 16px;
-}
-
 .hint {
-  margin: -6px 0 12px;
+  margin: 6px 0 12px;
   font-size: 0.9rem;
-}
-
-.member-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 12px;
 }
 
 .log {
@@ -275,13 +260,194 @@ button:disabled {
   background: #e6f2e9;
 }
 
+.step-drafter {
+  background: #f3e8f7;
+}
+
 .sources {
   margin: 12px 0 0;
   font-size: 0.85rem;
   color: var(--muted);
 }
 
+.card-dismissed {
+  opacity: 0.55;
+}
+
+.badge-status {
+  background: #3d5a80;
+}
+
+.card-links {
+  display: flex;
+  justify-content: space-between;
+  margin: 8px 0 0;
+  font-size: 0.88rem;
+}
+
+a {
+  color: #2a5db0;
+}
+
+/* ── Opportunity detail page ── */
+.back {
+  display: inline-block;
+  margin-bottom: 16px;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.detail-head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 20px;
+}
+
+.detail-title {
+  font-size: 1.7rem;
+  margin: 4px 0 4px;
+}
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: 360px minmax(0, 1fr);
+  gap: 24px;
+  align-items: start;
+}
+
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 18px;
+  overflow-wrap: anywhere;
+}
+
+.panel h2 {
+  margin-top: 18px;
+}
+
+.panel h2:first-child {
+  margin-top: 0;
+}
+
+.draft-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.draft-head h2 {
+  margin: 0;
+}
+
+.mini-log {
+  list-style: none;
+  padding: 10px 12px;
+  margin: 14px 0 0;
+  background: #faf9f6;
+  border-radius: 8px;
+  font-size: 0.88rem;
+}
+
+.mini-log li {
+  padding: 3px 0;
+}
+
+.legend {
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.draft-body {
+  border-top: 1px solid var(--border);
+  padding-top: 8px;
+  line-height: 1.55;
+}
+
+.draft-body h3 {
+  font-size: 1.3rem;
+}
+
+.draft-body h4 {
+  font-size: 1.05rem;
+  margin: 18px 0 6px;
+}
+
+.draft-body table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 10px 0;
+  font-size: 0.92rem;
+}
+
+.draft-body th,
+.draft-body td {
+  border: 1px solid var(--border);
+  padding: 6px 8px;
+  text-align: left;
+}
+
+.draft-body th {
+  background: #f6f5f1;
+}
+
+mark.assumed {
+  background: #fff1b8;
+  border-bottom: 2px solid #e0b100;
+  padding: 0 2px;
+}
+
+mark.missing {
+  background: #fde2df;
+  color: var(--verify);
+  border-bottom: 2px solid var(--verify);
+  font-weight: 600;
+  padding: 0 2px;
+}
+
+.list-block {
+  margin-top: 18px;
+  padding: 12px 14px;
+  border-radius: 8px;
+  background: #f6f5f1;
+}
+
+.list-block h3 {
+  margin: 0 0 6px;
+  font-size: 1rem;
+}
+
+.list-block ul {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.missing-list {
+  background: #fdf0ee;
+}
+
+.assumed-list {
+  background: #fff8db;
+}
+
+.checklist {
+  list-style: none;
+  padding-left: 0 !important;
+}
+
+.checklist li {
+  padding: 2px 0;
+}
+
 @media (max-width: 1000px) {
+  .detail-grid {
+    grid-template-columns: 1fr;
+  }
   .layout {
     grid-template-columns: 1fr;
   }

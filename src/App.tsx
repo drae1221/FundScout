@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import Detail from "./Detail";
 
 interface Org {
   id: string;
@@ -6,7 +7,7 @@ interface Org {
   type: string;
 }
 
-interface Opportunity {
+export interface Opportunity {
   id: string;
   audience: "club" | "members";
   title: string;
@@ -19,9 +20,10 @@ interface Opportunity {
   fit_score: number;
   reasons: string;
   eligibility_flags: string[];
+  status: "new" | "in_progress" | "submitted" | "dismissed";
 }
 
-interface LogLine {
+export interface LogLine {
   step: string;
   message: string;
   created_at: string;
@@ -46,7 +48,22 @@ async function getJson<T>(url: string): Promise<T> {
   return res.json();
 }
 
+// Simple hash routes: "#/" is the pipeline, "#/opportunity/<id>" is the detail page.
+function useRoute() {
+  const [hash, setHash] = useState(window.location.hash);
+  useEffect(() => {
+    const onChange = () => {
+      setHash(window.location.hash);
+      window.scrollTo(0, 0);
+    };
+    window.addEventListener("hashchange", onChange);
+    return () => window.removeEventListener("hashchange", onChange);
+  }, []);
+  return hash.match(/^#\/opportunity\/([0-9a-f-]+)$/)?.[1] ?? null;
+}
+
 export default function App() {
+  const opportunityId = useRoute();
   const [orgs, setOrgs] = useState<Org[]>([]);
   const [orgId, setOrgId] = useState("");
   const [data, setData] = useState<ScanData>(EMPTY);
@@ -111,6 +128,7 @@ export default function App() {
   }
 
   const running = activeScanId !== null;
+  if (opportunityId) return <Detail id={opportunityId} />;
   const club = data.opportunities.filter((o) => o.audience === "club");
 
   return (
@@ -176,12 +194,14 @@ export default function App() {
   );
 }
 
-function OpportunityCard({ o, showVerdict = false }: { o: Opportunity; showVerdict?: boolean }) {
+const STATUS_BADGES = { in_progress: "in progress", submitted: "submitted", dismissed: "dismissed" };
+
+function OpportunityCard({ o }: { o: Opportunity }) {
   return (
-    <article className="card">
+    <article className={`card${o.status === "dismissed" ? " card-dismissed" : ""}`}>
       <div className="card-head">
-        <a href={o.url} target="_blank" rel="noreferrer" className="card-title">
-          {o.title} ↗
+        <a href={`#/opportunity/${o.id}`} className="card-title">
+          {o.title}
         </a>
         <span className="score" title="Fit score">
           {o.fit_score}
@@ -189,7 +209,7 @@ function OpportunityCard({ o, showVerdict = false }: { o: Opportunity; showVerdi
       </div>
       {o.provider && <p className="provider">{o.provider}</p>}
       <p className="meta">
-        {showVerdict && <span className={`badge badge-${o.verdict}`}>{o.verdict}</span>}
+        {o.status !== "new" && <span className="badge badge-status">{STATUS_BADGES[o.status]}</span>}
         {o.amount && <span>{o.amount}</span>}
         <span>
           Deadline: {o.deadline ?? "see source"}
@@ -197,6 +217,10 @@ function OpportunityCard({ o, showVerdict = false }: { o: Opportunity; showVerdi
         </span>
       </p>
       <p className="reason">{o.reasons}</p>
+      <p className="card-links">
+        <a href={`#/opportunity/${o.id}`}>{o.verdict === "apply" ? "Open & draft →" : "Details →"}</a>
+        <a href={o.url} target="_blank" rel="noreferrer">Source ↗</a>
+      </p>
       {o.eligibility_flags.length > 0 && (
         <p className="flags">
           {o.eligibility_flags.map((f) => (

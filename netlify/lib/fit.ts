@@ -71,7 +71,7 @@ const TOOLS: Anthropic.Beta.BetaToolUnion[] = [
 const stripHtml = (s: string | null | undefined, max = 1500) =>
   (s ?? "").replace(/<[^>]+>/g, " ").replace(/&nbsp;/g, " ").replace(/\s+/g, " ").trim().slice(0, max);
 
-async function fetchGrantsGovDetails(input: { opportunity_id: string }): Promise<string> {
+export async function fetchGrantsGovDetails(input: { opportunity_id: string }): Promise<string> {
   if (!/^\d+$/.test(input.opportunity_id)) throw new Error("opportunity_id must be numeric");
   const res = await fetch("https://api.grants.gov/v1/api/fetchOpportunity", {
     method: "POST",
