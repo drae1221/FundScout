@@ -1,12 +1,14 @@
 import { db, logStep, type Org } from "./db";
 import { scout } from "./scout";
 import { fitCheck } from "./fit";
+import { sendToAutomation } from "./automation";
 
 const FIT_CONCURRENCY = 4; // Fit agents running at once
 
 // One full scan: Scout finds candidates, then a Fit agent judges each one.
 // Results are saved as they arrive so the dashboard fills in live.
-export async function runScan(orgId: string, scanId: string) {
+// weekly = the scheduled/"Run weekly scan now" scan, which also hands results to n8n.
+export async function runScan(orgId: string, scanId: string, weekly = false) {
   const { error: scanError } = await db.from("scans").insert({ id: scanId, org_id: orgId, status: "running" });
   if (scanError) throw new Error(scanError.message);
 
@@ -56,6 +58,7 @@ export async function runScan(orgId: string, scanId: string) {
       .update({ status: "done", finished_at: new Date().toISOString(), sources_checked: sourcesChecked, counts })
       .eq("id", scanId);
     await logStep(scanId, "Scan", `Done: ${counts.apply} apply, ${counts.maybe} maybe, ${counts.skip} skip`);
+    if (weekly) await sendToAutomation(scanId);
   } catch (err) {
     const message = (err as Error).message;
     await db.from("scans").update({ status: "failed", finished_at: new Date().toISOString(), error: message }).eq("id", scanId);

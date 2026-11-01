@@ -72,6 +72,9 @@ export default function App() {
   const [error, setError] = useState<string | null>(null);
   const logPanel = useRef<HTMLElement>(null);
   const [demoSavedAt, setDemoSavedAt] = useState<string | null>(null);
+  // After a weekly scan finishes, keep refreshing for a while so n8n's steps show up.
+  const [weeklyScanId, setWeeklyScanId] = useState<string | null>(null);
+  const [automationUntil, setAutomationUntil] = useState(0);
 
   useEffect(() => {
     if (DEMO_MODE) {
@@ -108,8 +111,24 @@ export default function App() {
   const poll = useCallback(async (scanId: string) => {
     const d = await getJson<ScanData>(`/api/scan-status?scan_id=${scanId}`);
     setData(d);
-    if (d.scan && d.scan.status !== "running") setActiveScanId(null);
-  }, []);
+    if (d.scan && d.scan.status !== "running") {
+      setActiveScanId(null);
+      if (scanId === weeklyScanId) setAutomationUntil(Date.now() + 90_000);
+    }
+  }, [weeklyScanId]);
+
+  useEffect(() => {
+    if (!automationUntil || !weeklyScanId) return;
+    const timer = setInterval(() => {
+      if (Date.now() > automationUntil) {
+        setAutomationUntil(0);
+        setWeeklyScanId(null);
+        return;
+      }
+      getJson<ScanData>(`/api/scan-status?scan_id=${weeklyScanId}`).then(setData).catch(() => {});
+    }, 2000);
+    return () => clearInterval(timer);
+  }, [automationUntil, weeklyScanId]);
 
   useEffect(() => {
     if (!activeScanId || DEMO_MODE) return; // the demo replays from the saved file instead
@@ -143,16 +162,19 @@ export default function App() {
     });
   }
 
-  async function findFunding() {
+  // weekly = what the scheduled scan does: scan, then hand the results to the n8n automation.
+  async function findFunding(weekly = false) {
     setError(null);
     if (DEMO_MODE) return replayDemo();
     const scanId = crypto.randomUUID();
     setData(EMPTY);
+    setAutomationUntil(0);
+    setWeeklyScanId(weekly ? scanId : null);
     setActiveScanId(scanId);
     const res = await fetch("/.netlify/functions/scan-background", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ org_id: orgId, scan_id: scanId }),
+      body: JSON.stringify({ org_id: orgId, scan_id: scanId, weekly }),
     });
     if (!res.ok) {
       setActiveScanId(null);
@@ -179,7 +201,12 @@ export default function App() {
               </option>
             ))}
           </select>
-          <button className="primary" onClick={findFunding} disabled={!orgId || running}>
+          {!DEMO_MODE && (
+            <button onClick={() => findFunding(true)} disabled={!orgId || running} title="Scan, then email the digest and add deadlines to the calendar">
+              Run weekly scan now
+            </button>
+          )}
+          <button className="primary" onClick={() => findFunding()} disabled={!orgId || running}>
             {running ? "Scanning…" : "Find funding"}
           </button>
         </div>
