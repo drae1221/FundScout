@@ -32,7 +32,7 @@ const run = {
   saved_at: new Date().toISOString(),
   org,
   scan: { ...scan, status: "done" },
-  log: log.filter((l) => l.step !== "Drafter"),
+  log: log.filter((l) => l.step !== "Drafter" && l.step !== "Automation"), // the demo replays "Find funding"
   opportunities: opportunities.map((o) => ({ ...o, status: "new" })),
   drafts,
   draftLogs,

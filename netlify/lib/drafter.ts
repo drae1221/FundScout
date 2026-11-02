@@ -116,8 +116,9 @@ Why it fits (from the Fit agent): ${opp.reasons}${
       : draft.content;
     const { error: insertError } = await db.from("drafts").insert({ opportunity_id: opp.id, ...rest, content });
     if (insertError) throw new Error(insertError.message);
+    const count = (n: number, word: string) => `${n} ${word}${n === 1 ? "" : "s"}`;
     await log(
-      `Draft ready for "${opp.title}": ${draft.assumptions.length} assumptions and ${draft.missing_items.length} missing items to check`,
+      `Draft ready for "${opp.title}": ${count(draft.assumptions.length, "assumption")} and ${count(draft.missing_items.length, "missing item")} to check`,
     );
   } catch (err) {
     await log(`Couldn't write the draft for "${opp.title}": ${(err as Error).message}`);
