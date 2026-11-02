@@ -33,7 +33,8 @@ Rules:
 - deadline: the next date the club must act by, as YYYY-MM-DD, only if the page or tool results state one. For funds decided at hearings or meetings, use the next submission deadline the club can still make; if those have passed, use the last upcoming hearing date the club can still get onto. If you mention a date like that in your reasons, put it here too. Otherwise null. Never guess. (The deadline is always shown as "verify on source".)
 - amount: the funding amount as written on the page or in the candidate info, or null.
 - fit_score: 0 to 100.
-- Profile fields that say "[PLACEHOLDER: ...]" or "unknown" are not known yet. Do not treat them as facts.`;
+- Profile fields that say "[PLACEHOLDER: ...]" or "unknown" are not known yet. Do not treat them as facts.
+- Facts under "Confirmed by the club" are confirmed true by the club's officers. Use them to settle eligibility questions they answer, and say so in the reasons (for example "The club confirmed it is affiliated with Arts & Sciences").`;
 
 const TOOLS: Anthropic.Beta.BetaToolUnion[] = [
   { type: "web_fetch_20260209", name: "web_fetch", max_uses: 2 },

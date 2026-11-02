@@ -29,6 +29,9 @@ export function describeOrg(org: Org): string {
     `Funding goals: ${org.funding_goals ?? "unknown"}`,
     `Target amount: ${org.target_amount ?? "unknown"}`,
     `Past wins: ${org.past_wins ?? "unknown"}`,
+    ...(org.confirmed_facts?.length
+      ? ["Confirmed by the club (treat as true):", ...org.confirmed_facts.map((f) => `- ${f.requirement}: ${f.answer}`)]
+      : []),
   ].join("\n");
 }
 

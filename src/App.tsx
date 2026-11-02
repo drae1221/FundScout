@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import Detail from "./Detail";
+import Profile from "./Profile";
 import { DEMO_MODE, loadDemoRun, replay } from "./demo";
 
 interface Org {
@@ -10,6 +11,7 @@ interface Org {
 
 export interface Opportunity {
   id: string;
+  org_id: string;
   audience: "club" | "members";
   title: string;
   provider: string | null;
@@ -49,7 +51,8 @@ async function getJson<T>(url: string): Promise<T> {
   return res.json();
 }
 
-// Simple hash routes: "#/" is the pipeline, "#/opportunity/<id>" is the detail page.
+// Simple hash routes: "#/" is the pipeline, "#/opportunity/<id>" is the detail page,
+// "#/profile/<id>" (or "#/profile/new") is the profile page.
 function useRoute() {
   const [hash, setHash] = useState(window.location.hash);
   useEffect(() => {
@@ -60,11 +63,14 @@ function useRoute() {
     window.addEventListener("hashchange", onChange);
     return () => window.removeEventListener("hashchange", onChange);
   }, []);
-  return hash.match(/^#\/opportunity\/([0-9a-f-]+)$/)?.[1] ?? null;
+  return {
+    opportunityId: hash.match(/^#\/opportunity\/([0-9a-f-]+)$/)?.[1] ?? null,
+    profileId: hash.match(/^#\/profile\/([0-9a-f-]+|new)$/)?.[1] ?? null,
+  };
 }
 
 export default function App() {
-  const opportunityId = useRoute();
+  const { opportunityId, profileId } = useRoute();
   const [orgs, setOrgs] = useState<Org[]>([]);
   const [orgId, setOrgId] = useState("");
   const [data, setData] = useState<ScanData>(EMPTY);
@@ -87,13 +93,28 @@ export default function App() {
         .catch((e) => setError(e.message));
       return;
     }
+    loadOrgs();
+  }, []);
+
+  function loadOrgs(select?: string) {
     getJson<Org[]>("/api/orgs")
       .then((list) => {
         setOrgs(list);
-        setOrgId(list[0]?.id ?? "");
+        setOrgId((current) => select ?? (current || list[0]?.id || ""));
       })
       .catch(() => setError("Couldn't load clubs. Is the backend running?"));
-  }, []);
+  }
+
+  // Coming back from the profile page: names may have changed.
+  useEffect(() => {
+    if (!profileId && !DEMO_MODE && orgs.length) loadOrgs();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [profileId]);
+
+  function chooseOrg(value: string) {
+    if (value === "__new") window.location.hash = "#/profile/new";
+    else setOrgId(value);
+  }
 
   // Show the latest scan whenever the selected club changes.
   useEffect(() => {
@@ -184,6 +205,18 @@ export default function App() {
 
   const running = activeScanId !== null;
   if (opportunityId) return <Detail id={opportunityId} />;
+  if (profileId) {
+    return (
+      <Profile
+        key={profileId}
+        id={profileId}
+        onSaved={(newId) => {
+          loadOrgs(newId);
+          window.location.hash = "#/";
+        }}
+      />
+    );
+  }
   const club = data.opportunities.filter((o) => o.audience === "club");
 
   return (
@@ -197,13 +230,19 @@ export default function App() {
           </div>
         </div>
         <div className="controls">
-          <select value={orgId} onChange={(e) => setOrgId(e.target.value)} disabled={running} aria-label="Club">
+          <select value={orgId} onChange={(e) => chooseOrg(e.target.value)} disabled={running} aria-label="Club">
             {orgs.map((o) => (
               <option key={o.id} value={o.id}>
                 {o.name}
               </option>
             ))}
+            {!DEMO_MODE && <option value="__new">+ Add organization…</option>}
           </select>
+          {!DEMO_MODE && orgId && (
+            <a className="button-link" href={`#/profile/${orgId}`}>
+              Edit profile
+            </a>
+          )}
           {!DEMO_MODE && (
             <button onClick={() => findFunding(true)} disabled={!orgId || running} title="Scan, then email the digest and add deadlines to the calendar">
               Run weekly scan now

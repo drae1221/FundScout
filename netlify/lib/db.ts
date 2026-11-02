@@ -20,6 +20,16 @@ export interface Org {
   target_amount: number | null;
   past_wins: string | null;
   industry_ties: string[];
+  funding_contacts?: string[];
+  confirmed_facts?: ConfirmedFact[]; // missing until migration 003 has run
+}
+
+// Something the club confirmed about itself, e.g. from "We meet this" on an opportunity.
+export interface ConfirmedFact {
+  requirement: string;
+  answer: string;
+  added_at: string;
+  from_opportunity?: string | null;
 }
 
 // Writes one line to the on-screen activity log (and the terminal, for local runs).

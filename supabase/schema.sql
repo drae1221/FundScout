@@ -20,6 +20,7 @@ create table orgs (
   past_wins text,
   industry_ties text[] not null default '{}',
   funding_contacts text[] not null default '{}',
+  confirmed_facts jsonb not null default '[]'::jsonb, -- [{requirement, answer, added_at, from_opportunity}]
   created_at timestamptz not null default now()
 );
 

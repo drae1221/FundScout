@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState, type ReactNode } from "react";
 import type { LogLine, Opportunity } from "./App";
 import { DEMO_MODE, demoChanges, demoDrafted, loadDemoRun, replay } from "./demo";
+import { FactForm } from "./Profile";
 
 export interface Draft {
   id: string;
@@ -30,6 +31,10 @@ export default function Detail({ id }: { id: string }) {
   const [error, setError] = useState<string | null>(null);
   // While drafting: the draft id and log length from before we started, to spot the new result.
   const [drafting, setDrafting] = useState<{ draftId: string | null; logLength: number } | null>(null);
+  // "We meet this": which flag is being answered, facts saved on this visit, and a running re-check.
+  const [answering, setAnswering] = useState<string | null>(null);
+  const [confirmed, setConfirmed] = useState<string[]>([]);
+  const [rechecking, setRechecking] = useState<{ logLength: number } | null>(null);
 
   const load = useCallback(async () => {
     if (DEMO_MODE) {
@@ -63,7 +68,7 @@ export default function Detail({ id }: { id: string }) {
       const d = await load().catch(() => null);
       if (!d) return;
       const newLines = d.log.slice(drafting.logLength);
-      const failed = newLines.find((l) => l.message.startsWith("Couldn't"));
+      const failed = newLines.find((l) => l.message.startsWith("Couldn't write"));
       if ((d.draft && d.draft.id !== drafting.draftId) || failed) {
         setDrafting(null);
         if (failed) setError(failed.message);
@@ -71,6 +76,49 @@ export default function Detail({ id }: { id: string }) {
     }, 2000);
     return () => clearInterval(timer);
   }, [drafting, load]);
+
+  // While the Fit agent re-checks this card, refresh until it reports back.
+  useEffect(() => {
+    if (!rechecking) return;
+    const timer = setInterval(async () => {
+      const d = await load().catch(() => null);
+      const done = d?.log.slice(rechecking.logLength).find((l) => /^(Re-checked|Couldn't re-check)/.test(l.message));
+      if (done) {
+        setRechecking(null);
+        if (done.message.startsWith("Couldn't")) setError(done.message);
+      }
+    }, 2000);
+    return () => clearInterval(timer);
+  }, [rechecking, load]);
+
+  async function confirmFlag(requirement: string, answer: string) {
+    if (!data) return;
+    setError(null);
+    const res = await fetch("/api/org-fact", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ org_id: data.opportunity.org_id, requirement, answer, from_opportunity: data.opportunity.title }),
+    });
+    const body = await res.json().catch(() => ({}));
+    if (!res.ok) return setError(body.error ?? `Couldn't save (${res.status})`);
+    setConfirmed((c) => [...c, requirement]);
+    setAnswering(null);
+  }
+
+  async function recheck() {
+    if (!data) return;
+    setError(null);
+    setRechecking({ logLength: data.log.length });
+    const res = await fetch("/.netlify/functions/recheck-background", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ opportunity_id: id }),
+    });
+    if (!res.ok) {
+      setRechecking(null);
+      setError(`Couldn't start the re-check (${res.status})`);
+    }
+  }
 
   async function writeDraft() {
     if (!data) return;
@@ -162,11 +210,52 @@ export default function Detail({ id }: { id: string }) {
         <section className="panel">
           <h2>Why FundScout thinks so</h2>
           <p>{o.reasons}</p>
-          {o.eligibility_flags.length > 0 && (
-            <p className="flags">
-              {o.eligibility_flags.map((f) => <span key={f} className="flag">{f}</span>)}
-            </p>
+          {o.eligibility_flags.length > 0 && !DEMO_MODE && o.verdict !== "apply" && (
+            <p className="hint">Does your club meet one of these? Tell FundScout why, and it will remember for every future scan.</p>
           )}
+          {o.eligibility_flags.length > 0 && (
+            <ul className="flag-list">
+              {o.eligibility_flags.map((f) => (
+                <li key={f}>
+                  <span className="flag">{f}</span>
+                  {confirmed.includes(f) ? (
+                    <span className="confirmed-note">✓ Saved to profile</span>
+                  ) : (
+                    !DEMO_MODE &&
+                    o.verdict !== "apply" &&
+                    answering !== f && (
+                      <button className="link-button" onClick={() => setAnswering(f)}>
+                        We meet this
+                      </button>
+                    )
+                  )}
+                  {answering === f && (
+                    <FactForm requirement={f} submitLabel="Save to profile" onAdd={(req, answer) => confirmFlag(req, answer)} />
+                  )}
+                </li>
+              ))}
+            </ul>
+          )}
+          {(confirmed.length > 0 || rechecking) && (
+            <div className="recheck">
+              <button className="primary" onClick={recheck} disabled={rechecking !== null}>
+                {rechecking ? "Re-checking…" : "Re-check this opportunity"}
+              </button>
+              {rechecking && (
+                <ol className="mini-log">
+                  {data.log.slice(rechecking.logLength).length === 0 && <li>Starting the Fit agent…</li>}
+                  {data.log.slice(rechecking.logLength).map((l, i) => (
+                    <li key={i}>
+                      <span className="step step-fit">Fit</span> {l.message}
+                    </li>
+                  ))}
+                </ol>
+              )}
+            </div>
+          )}
+          {!rechecking && data.log.filter((l) => l.message.startsWith("Re-checked")).slice(-1).map((l) => (
+            <p key={l.created_at} className="recheck-result">{l.message.replace(/^Re-checked "[^"]*": /, "Re-checked: ")}</p>
+          ))}
           <h2>Deadline</h2>
           <p>
             {o.deadline ?? "Not stated. Check the source."}
@@ -199,7 +288,7 @@ export default function Detail({ id }: { id: string }) {
           {drafting && (
             <ol className="mini-log">
               {sinceStart.length === 0 && <li>Starting the Drafter agent…</li>}
-              {sinceStart.map((l, i) => <li key={i}><span className="step step-drafter">Drafter</span> {l.message}</li>)}
+              {sinceStart.filter((l) => l.step === "Drafter").map((l, i) => <li key={i}><span className="step step-drafter">Drafter</span> {l.message}</li>)}
             </ol>
           )}
 

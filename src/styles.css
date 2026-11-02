@@ -777,10 +777,186 @@ mark.missing {
   padding: 2px 0;
 }
 
+/* ── Profile page and confirmed facts ── */
+.button-link {
+  display: inline-flex;
+  align-items: center;
+  padding: 9px 12px;
+  border-radius: 9px;
+  font-size: 0.95rem;
+  color: #e9e5d8;
+  text-decoration: none;
+  border: 1px solid #3a3a40;
+}
+
+.button-link:hover {
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.saved-note,
+.confirmed-note {
+  align-self: center;
+  color: var(--apply);
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.profile-grid {
+  grid-template-columns: minmax(0, 1fr) 380px;
+}
+
+.form .field {
+  display: block;
+  margin: 0 0 12px;
+}
+
+.field > span {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.field em {
+  font-style: normal;
+  font-weight: 400;
+  color: var(--faint);
+}
+
+.field input,
+.field select,
+.field textarea,
+.fact-form input,
+.fact-form textarea {
+  width: 100%;
+  box-sizing: border-box;
+  font: inherit;
+  font-size: 0.95rem;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #fff;
+}
+
+.field textarea,
+.fact-form textarea {
+  resize: vertical;
+}
+
+.field input:focus,
+.field select:focus,
+.field textarea:focus,
+.fact-form input:focus,
+.fact-form textarea:focus {
+  outline: 2px solid var(--accent);
+  border-color: var(--accent);
+}
+
+.form .row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 0 12px;
+}
+
+.checks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 18px;
+  margin: 2px 0 6px;
+}
+
+.check {
+  font-size: 0.92rem;
+}
+
+.fact-list {
+  list-style: none;
+  padding: 0;
+  margin: 10px 0;
+}
+
+.fact-list li {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  margin-bottom: 8px;
+  background: var(--apply-bg);
+  border-radius: 10px;
+}
+
+.fact-list p {
+  margin: 2px 0;
+  font-size: 0.92rem;
+}
+
+.fact-form {
+  display: grid;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.fact-form button {
+  justify-self: start;
+}
+
+.link-button {
+  border: none;
+  background: none;
+  padding: 0;
+  color: var(--link);
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.link-button:hover {
+  text-decoration: underline;
+}
+
+.flag-list {
+  list-style: none;
+  padding: 0;
+  margin: 8px 0 0;
+}
+
+.flag-list li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 10px;
+  margin-bottom: 6px;
+}
+
+.flag-list .flag {
+  margin: 0;
+}
+
+.flag-list .fact-form {
+  flex-basis: 100%;
+  margin: 2px 0 8px;
+}
+
+.recheck {
+  margin: 12px 0 4px;
+}
+
+.recheck-result {
+  margin: 10px 0 0;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: var(--apply-bg);
+  color: var(--apply);
+  font-weight: 600;
+  font-size: 0.92rem;
+}
+
 /* ── Smaller screens ── */
 @media (max-width: 1100px) {
   .layout,
-  .detail-grid {
+  .detail-grid,
+  .profile-grid {
     grid-template-columns: minmax(0, 1fr);
   }
   .log {
