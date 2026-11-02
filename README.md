@@ -27,6 +27,8 @@ Run weekly scan now ──► scan ──► n8n automation ──► calendar e
 | **Fit & Eligibility** | reads the source page, or the official Grants.gov listing | hard eligibility (registered student org? 501(c)(3) required? geography?), fit score, and an Apply / Maybe / Skip verdict with plain-language reasons |
 | **Drafter** | reads the source page | the draft type (CU funding request / grant application / sponsor pitch), what to reuse from the profile, and what the club must supply |
 
+**Profile and confirmed facts:** each organization has a profile page (add new clubs or nonprofits from the club picker). On a Maybe or Skip card, the treasurer can answer an eligibility flag with **We meet this** and a reason; the answer is saved to the profile as a confirmed fact, and **Re-check this opportunity** runs the Fit agent again with it. Every agent reads confirmed facts on every scan, so one answer helps with future opportunities too.
+
 **Automation (n8n, separate from the agents):** when a weekly scan finishes, FundScout posts the Apply matches to an n8n webhook. n8n checks for deadlines, adds each deadline and a 2-week reminder to Google Calendar, emails the digest from Gmail, and posts each step back to `/api/automation-log`, which shows it in the activity log. The workflow export is in [automation/n8n-workflow.json](automation/n8n-workflow.json).
 
 ## Guardrails
@@ -65,7 +67,7 @@ npm run draft -- <opportunity id>          # write a draft for one opportunity
 npm run save-demo -- <scan id>             # save a finished scan as the cached demo run
 ```
 
-**Database (Supabase):** create a project, then in the SQL Editor run `supabase/schema.sql` and then `supabase/seed.sql`. Put the Project URL and the `service_role` key in `.env` and in Netlify's environment variables.
+**Database (Supabase):** create a project, then in the SQL Editor run `supabase/schema.sql` and then `supabase/seed.sql`. (Existing databases: run the files in `supabase/migrations/` in order.) Put the Project URL and the `service_role` key in `.env` and in Netlify's environment variables.
 
 **Deploy (Netlify):** import this repo in Netlify; `netlify.toml` sets the build. Add `ANTHROPIC_API_KEY`, `SUPABASE_URL`, `SUPABASE_SERVICE_KEY` and `N8N_WEBHOOK_URL` as environment variables, then check `/api/health`.
 
