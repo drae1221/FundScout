@@ -37,7 +37,7 @@ insert into orgs (name, type, university, member_count, is_registered_student_or
 ),
 (
   -- Fictional test org: used to check that 501(c)(3)-only grants become Apply here but Skip for clubs.
-  'Sample Boulder Nonprofit (test)', 'nonprofit', null, null, false, true, false,
+  'Boulder STEM Tutors (sample nonprofit)', 'nonprofit', null, null, false, true, false,
   'Fictional small Boulder nonprofit used for testing. Provides after-school STEM tutoring.',
   'After-school tutoring, summer camp, volunteer training',
   'Fund tutoring supplies and one part-time coordinator', 25000,

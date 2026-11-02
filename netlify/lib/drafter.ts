@@ -27,7 +27,8 @@ Hard rules (these are shown on the product's trust slide):
 - Use only facts from the organization profile and the opportunity page. Never invent numbers, dates, names, quotes or results.
 - When you need a fact the profile doesn't have (a cost, an event date, an attendance estimate), write a placeholder inline: [[MISSING: what is needed]]. Also add it to missing_items.
 - When you had to make a reasonable guess or generalization that isn't stated in the profile, mark it inline: [[ASSUMED: the guessed text]]. Also add it to assumptions.
-- Profile fields that say "[PLACEHOLDER: ...]" or "unknown" are not known yet. Treat them as missing.`;
+- Profile fields that say "[PLACEHOLDER: ...]" or "unknown" are not known yet. Treat them as missing.
+- Never mention tools, tool limits or technical errors in the draft or lists.`;
 
 const TOOLS: Anthropic.Beta.BetaToolUnion[] = [
   { type: "web_fetch_20260209", name: "web_fetch", max_uses: 2 },

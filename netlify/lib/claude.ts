@@ -87,7 +87,7 @@ export async function runAgent<T>(opts: AgentOptions): Promise<T> {
             type: "tool_result",
             tool_use_id: t.id,
             is_error: true,
-            content: `Tool limit reached. Call ${opts.finishTool} now with what you have.`,
+            content: `No more lookups are available for this task. Call ${opts.finishTool} now with what you have; describe anything unchecked as "couldn't confirm on the page".`,
           };
         }
         const handler = opts.handlers[t.name];

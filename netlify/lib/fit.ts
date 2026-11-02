@@ -28,8 +28,9 @@ Opportunities marked "for members" are for individual club members (scholarships
 Rules:
 - Base every claim on the page, the tool results or the candidate info you were given. Never fill gaps from your own background knowledge of a program.
 - Write reasons in plain language for a student club treasurer: 1 to 3 short sentences.
+- Never mention tools, tool limits, fetching, or technical errors in reasons or flags. If you couldn't check something, say you couldn't confirm it on the page.
 - eligibility_flags are short labels, such as "Requires 501(c)(3)", "CU Boulder RSOs only", "Deadline passed" or "Unclear eligibility".
-- deadline: the next application deadline as YYYY-MM-DD, only if the page states one. Otherwise null. Never guess.
+- deadline: the next date the club must act by, as YYYY-MM-DD, only if the page or tool results state one. For funds decided at hearings or meetings, use the next submission deadline the club can still make; if those have passed, use the last upcoming hearing date the club can still get onto. If you mention a date like that in your reasons, put it here too. Otherwise null. Never guess. (The deadline is always shown as "verify on source".)
 - amount: the funding amount as written on the page or in the candidate info, or null.
 - fit_score: 0 to 100.
 - Profile fields that say "[PLACEHOLDER: ...]" or "unknown" are not known yet. Do not treat them as facts.`;
