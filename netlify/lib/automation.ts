@@ -83,6 +83,6 @@ export async function sendToAutomation(scanId: string) {
     await logStep(scanId, "Automation", `Sent ${payload.apply_opportunities.length} Apply matches to the n8n automation`);
   } catch (err) {
     console.error("n8n hand-off failed:", (err as Error).message);
-    await logStep(scanId, "Automation", "Couldn't reach the n8n automation");
+    await logStep(scanId, "Automation", `Couldn't reach the n8n automation (TEMPORARY detail: ${(err as Error).message})`);
   }
 }
