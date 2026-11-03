@@ -25,7 +25,9 @@ export async function sendToAutomation(scanId: string) {
   const secret = process.env.N8N_WEBHOOK_SECRET;
   const token = logToken(scanId);
   if (!url || !secret || !token) {
-    await logStep(scanId, "Automation", "The n8n automation isn't set up yet, so no email or calendar events");
+    // TEMPORARY (setup check): names only, never values. Remove once n8n works.
+    const missing = ["N8N_WEBHOOK_URL", "N8N_WEBHOOK_SECRET", "AUTOMATION_LOG_SECRET"].filter((n) => !process.env[n]);
+    await logStep(scanId, "Automation", `The n8n automation isn't set up yet (missing: ${missing.join(", ")}), so no email or calendar events`);
     return;
   }
 
