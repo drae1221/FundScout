@@ -2,7 +2,7 @@
 -- Run this once in Supabase: Dashboard → SQL Editor → New query → paste → Run.
 -- Safe to re-run: it drops and recreates the tables (this DELETES their data).
 
-drop table if exists org_members, activity_log, drafts, opportunities, scans, funding_library, orgs cascade;
+drop table if exists org_facts, usage_events, org_members, activity_log, drafts, opportunities, scans, funding_library, orgs cascade;
 
 create table orgs (
   id uuid primary key default gen_random_uuid(),
@@ -20,7 +20,7 @@ create table orgs (
   past_wins text,
   industry_ties text[] not null default '{}',
   funding_contacts text[] not null default '{}',
-  confirmed_facts jsonb not null default '[]'::jsonb, -- [{requirement, answer, added_at, added_by, from_opportunity}]
+  confirmed_facts jsonb not null default '[]'::jsonb, -- old place for facts; now unused (see org_facts)
   created_at timestamptz not null default now()
 );
 
@@ -83,7 +83,8 @@ create table drafts (
   content text not null, -- markdown
   assumptions text[] not null default '{}',
   missing_items text[] not null default '{}',
-  created_at timestamptz not null default now()
+  created_at timestamptz not null default now(),
+  constraint drafts_one_per_opportunity unique (opportunity_id) -- a rewrite replaces the draft
 );
 
 create table activity_log (
@@ -105,6 +106,30 @@ create table org_members (
 );
 
 create index on org_members (email);
+
+-- Facts a club officer confirmed (e.g. "We meet this"). One answer per requirement per org.
+create table org_facts (
+  id uuid primary key default gen_random_uuid(),
+  org_id uuid not null references orgs(id) on delete cascade,
+  requirement text not null check (length(btrim(requirement)) between 1 and 300),
+  answer text not null check (length(btrim(answer)) between 1 and 1000),
+  requirement_key text generated always as (lower(regexp_replace(btrim(requirement), '\s+', ' ', 'g'))) stored,
+  added_by text not null,
+  added_at timestamptz not null default now(),
+  from_opportunity text,
+  constraint org_facts_one_per_requirement unique (org_id, requirement_key)
+);
+
+-- Paid AI jobs started, for the daily limits in netlify/lib/limits.ts.
+create table usage_events (
+  id bigint generated always as identity primary key,
+  org_id uuid not null references orgs(id) on delete cascade,
+  kind text not null check (kind in ('scan', 'draft', 'recheck')),
+  user_email text,
+  created_at timestamptz not null default now()
+);
+create index on usage_events (org_id, kind, created_at);
+create unique index one_running_scan_per_org on scans (org_id) where status = 'running';
 create index on opportunities (org_id, verdict);
 create index on activity_log (scan_id, created_at);
 
@@ -117,4 +142,6 @@ alter table opportunities enable row level security;
 alter table drafts enable row level security;
 alter table activity_log enable row level security;
 alter table org_members enable row level security;
+alter table org_facts enable row level security;
+alter table usage_events enable row level security;
 revoke all on all tables in schema public from anon, authenticated;

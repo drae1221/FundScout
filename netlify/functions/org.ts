@@ -1,4 +1,4 @@
-import { db } from "../lib/db";
+import { db, loadFacts } from "../lib/db";
 import { notMember, requireUser, roleIn } from "../lib/auth";
 import { isUuid, serverError } from "../lib/http";
 
@@ -14,7 +14,7 @@ export default async (req: Request) => {
   const { data, error } = await db.from("orgs").select("*").eq("id", id).maybeSingle();
   if (error) return serverError("org", error);
   if (!data) return notMember();
-  return Response.json({ ...data, my_role: role });
+  return Response.json({ ...data, confirmed_facts: await loadFacts(id), my_role: role });
 };
 
 export const config = { path: "/api/org" };

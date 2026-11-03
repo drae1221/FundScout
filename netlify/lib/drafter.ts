@@ -1,5 +1,5 @@
 import type Anthropic from "@anthropic-ai/sdk";
-import { db, logStep, type Org } from "./db";
+import { db, loadOrg, logStep } from "./db";
 import { runAgent } from "./claude";
 import { describeOrg } from "./scout";
 import { fetchGrantsGovDetails } from "./fit";
@@ -74,8 +74,7 @@ export async function writeDraft(opportunityId: string) {
   const log = (message: string) => logStep(opp.scan_id, "Drafter", message);
 
   try {
-    const { data: org, error: orgError } = await db.from("orgs").select("*").eq("id", opp.org_id).single<Org>();
-    if (orgError) throw new Error(orgError.message);
+    const org = await loadOrg(opp.org_id);
     const { data: lib } = opp.library_id
       ? await db.from("funding_library").select("eligibility_notes,typical_amount,deadline_notes").eq("id", opp.library_id).maybeSingle()
       : { data: null };
@@ -124,8 +123,11 @@ ${untrusted("untrusted_search_result", opp.url, `Title: ${opp.title}\nProvider: 
     };
     const body = String(draft.content ?? "").replace(/<[^>]*>/g, "").trim().slice(0, 12_000);
     const content = requirements.length ? `${body}\n\n## Requirements checklist\n${requirements.map((r) => `- [ ] ${r}`).join("\n")}` : body;
-    const { error: insertError } = await db.from("drafts").insert({ opportunity_id: opp.id, ...rest, content });
-    if (insertError) throw new Error(insertError.message);
+    // One draft per opportunity (a database rule): a rewrite replaces it in one step.
+    const { error: saveError } = await db
+      .from("drafts")
+      .upsert({ opportunity_id: opp.id, ...rest, content, created_at: new Date().toISOString() }, { onConflict: "opportunity_id" });
+    if (saveError) throw new Error(saveError.message);
     const count = (n: number, word: string) => `${n} ${word}${n === 1 ? "" : "s"}`;
     await log(
       `Draft ready for "${opp.title}": ${count(rest.assumptions.length, "assumption")} and ${count(rest.missing_items.length, "missing item")} to check`,

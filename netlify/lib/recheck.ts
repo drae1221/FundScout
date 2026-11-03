@@ -1,4 +1,4 @@
-import { db, logStep, type Org } from "./db";
+import { db, loadOrg, logStep } from "./db";
 import { fitCheck } from "./fit";
 import type { Candidate } from "./scout";
 
@@ -11,8 +11,7 @@ export async function recheck(opportunityId: string) {
   const before = `${opp.verdict.toUpperCase()} (${opp.fit_score})`;
 
   try {
-    const { data: org, error: orgError } = await db.from("orgs").select("*").eq("id", opp.org_id).single<Org>();
-    if (orgError) throw new Error(orgError.message);
+    const org = await loadOrg(opp.org_id);
     await log(`Re-checking "${opp.title}" with the club's confirmed facts`);
     const candidate: Candidate = {
       title: opp.title,

@@ -71,7 +71,8 @@ export default function Detail({ id }: { id: string }) {
       if (!d) return;
       const newLines = d.log.slice(drafting.logLength);
       const failed = newLines.find((l) => l.message.startsWith("Couldn't write"));
-      if ((d.draft && d.draft.id !== drafting.draftId) || failed) {
+      const ready = newLines.some((l) => l.message.startsWith("Draft ready"));
+      if (ready || (d.draft && d.draft.id !== drafting.draftId) || failed) {
         setDrafting(null);
         if (failed) setError(failed.message);
       }

@@ -1,4 +1,4 @@
-import { db, logStep, type Org } from "./db";
+import { db, loadOrg, logStep } from "./db";
 import { scout } from "./scout";
 import { fitCheck } from "./fit";
 import { sendToAutomation } from "./automation";
@@ -14,8 +14,7 @@ export async function runScan(orgId: string, scanId: string, weekly = false) {
   if (scanError) throw new Error(scanError.message);
 
   try {
-    const { data: org, error } = await db.from("orgs").select("*").eq("id", orgId).single<Org>();
-    if (error) throw new Error(`Org not found: ${error.message}`);
+    const org = await loadOrg(orgId);
     await logStep(scanId, "Scan", `Started a funding scan for ${org.name}`);
 
     const { candidates, sourcesChecked } = await scout(org, scanId);

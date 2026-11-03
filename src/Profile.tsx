@@ -2,6 +2,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import { api, errorText, postJson } from "./auth";
 
 export interface ConfirmedFact {
+  id: string;
   requirement: string;
   answer: string;
   added_at: string;
@@ -108,7 +109,7 @@ export default function Profile({ id, onSaved }: { id: string | "new"; onSaved: 
     if (id === "new") onSaved(body.id);
   }
 
-  async function changeFacts(change: { requirement: string; answer: string } | { remove: number }) {
+  async function changeFacts(change: { requirement: string; answer: string } | { remove: string }) {
     setError(null);
     const res = await postJson("/api/org-fact", { org_id: id, ...change });
     if (!res.ok) return setError(await errorText(res, "Couldn't save the fact"));
@@ -224,8 +225,8 @@ export default function Profile({ id, onSaved }: { id: string | "new"; onSaved: 
             <>
               {(form.confirmed_facts ?? []).length === 0 && <p className="empty">No confirmed facts yet.</p>}
               <ul className="fact-list">
-                {(form.confirmed_facts ?? []).map((f, i) => (
-                  <li key={i}>
+                {(form.confirmed_facts ?? []).map((f) => (
+                  <li key={f.id}>
                     <div>
                       <b>{f.requirement}</b>
                       <p>{f.answer}</p>
@@ -234,7 +235,7 @@ export default function Profile({ id, onSaved }: { id: string | "new"; onSaved: 
                         {f.from_opportunity && ` · from "${f.from_opportunity}"`}
                       </span>
                     </div>
-                    <button className="link-button" onClick={() => changeFacts({ remove: i })} title="Remove this fact">
+                    <button className="link-button" onClick={() => changeFacts({ remove: f.id })} title="Remove this fact">
                       Remove
                     </button>
                   </li>
