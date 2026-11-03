@@ -26,8 +26,10 @@ export async function sendToAutomation(scanId: string) {
   const token = logToken(scanId);
   if (!url || !secret || !token) {
     // TEMPORARY (setup check): names only, never values. Remove once n8n works.
-    const missing = ["N8N_WEBHOOK_URL", "N8N_WEBHOOK_SECRET", "AUTOMATION_LOG_SECRET"].filter((n) => !process.env[n]);
-    await logStep(scanId, "Automation", `The n8n automation isn't set up yet (missing: ${missing.join(", ")}), so no email or calendar events`);
+    const state = (n: string) => (process.env[n] === undefined ? "missing" : process.env[n]!.trim() === "" ? "empty" : "set");
+    const status = ["N8N_WEBHOOK_URL", "N8N_WEBHOOK_SECRET", "AUTOMATION_LOG_SECRET"].map((n) => `${n}=${state(n)}`).join(", ");
+    const similar = Object.keys(process.env).filter((n) => /N8N|WEBHOOK|SECRET/i.test(n)).map((n) => JSON.stringify(n)).join(", ");
+    await logStep(scanId, "Automation", `Setup check: ${status}. Similar names the server sees: ${similar || "none"}`);
     return;
   }
 
