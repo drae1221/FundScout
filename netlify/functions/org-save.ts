@@ -1,4 +1,5 @@
 import { db } from "../lib/db";
+import { serverError } from "../lib/http";
 
 // POST /api/org-save { id?, ...profile fields }
 // Creates an organization (no id) or updates one. Only the profile fields below can be set.
@@ -26,7 +27,7 @@ export default async (req: Request) => {
 
   const query = body.id ? db.from("orgs").update(row).eq("id", body.id) : db.from("orgs").insert(row);
   const { data, error } = await query.select().single();
-  if (error) return Response.json({ error: error.message }, { status: 500 });
+  if (error) return serverError("org-save", error);
   return Response.json(data);
 };
 

@@ -1,4 +1,5 @@
 import { db, type ConfirmedFact } from "../lib/db";
+import { serverError } from "../lib/http";
 
 // POST /api/org-fact { org_id, requirement, answer, from_opportunity? }  adds a confirmed fact
 // POST /api/org-fact { org_id, remove: index }                           removes one
@@ -6,10 +7,7 @@ export default async (req: Request) => {
   if (req.method !== "POST") return Response.json({ error: "POST only" }, { status: 405 });
   const body = await req.json().catch(() => ({}));
   const { data: org, error } = await db.from("orgs").select("confirmed_facts").eq("id", body.org_id ?? "").maybeSingle();
-  if (error) {
-    const hint = /confirmed_facts/.test(error.message) ? " (run supabase/migrations/003_confirmed_facts.sql)" : "";
-    return Response.json({ error: error.message + hint }, { status: 500 });
-  }
+  if (error) return serverError("org-fact", error);
   if (!org) return Response.json({ error: "Unknown organization" }, { status: 404 });
 
   let facts: ConfirmedFact[] = Array.isArray(org.confirmed_facts) ? org.confirmed_facts : [];
@@ -27,7 +25,7 @@ export default async (req: Request) => {
   }
 
   const { data, error: saveError } = await db.from("orgs").update({ confirmed_facts: facts }).eq("id", body.org_id).select("confirmed_facts").single();
-  if (saveError) return Response.json({ error: saveError.message }, { status: 500 });
+  if (saveError) return serverError("org-fact", saveError);
   return Response.json(data.confirmed_facts);
 };
 

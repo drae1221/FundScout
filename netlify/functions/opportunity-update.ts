@@ -1,4 +1,5 @@
 import { db } from "../lib/db";
+import { serverError } from "../lib/http";
 
 // POST /api/opportunity-update { id, status?, deadline_verified? }
 // The detail page's buttons. Only these two fields can change.
@@ -17,7 +18,7 @@ export default async (req: Request) => {
   if (!id || Object.keys(changes).length === 0) return Response.json({ error: "Nothing to update" }, { status: 400 });
 
   const { data, error } = await db.from("opportunities").update(changes).eq("id", id).select().single();
-  if (error) return Response.json({ error: error.message }, { status: 500 });
+  if (error) return serverError("opportunity-update", error);
   return Response.json(data);
 };
 

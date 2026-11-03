@@ -1,6 +1,7 @@
 import type Anthropic from "@anthropic-ai/sdk";
 import { db, logStep, type Org } from "./db";
 import { runAgent } from "./claude";
+import { isHttpUrl } from "./http";
 
 export interface Candidate {
   title: string;
@@ -212,6 +213,10 @@ export async function scout(org: Org, scanId: string): Promise<{ candidates: Can
     if (c.source !== "library" || !c.library_id) c.library_id = null;
     // Library entries always link to the stored official page.
     if (c.source === "library" && c.library_id && libraryUrls.has(c.library_id)) c.url = libraryUrls.get(c.library_id)!;
+    if (!isHttpUrl(c.url)) {
+      await logStep(scanId, "Scout", `Dropped "${c.title}": its link isn't a normal web address`);
+      continue;
+    }
     if (!seenUrls.has(normalizeUrl(c.url))) {
       await logStep(scanId, "Scout", `Dropped "${c.title}": its link didn't come from a search result`);
       continue;

@@ -1,4 +1,5 @@
 import { db } from "../lib/db";
+import { serverError } from "../lib/http";
 
 // GET /api/scan-status?scan_id=...  or  ?org_id=... (latest scan for that org)
 // Returns the scan, its activity log and its opportunities.
@@ -23,7 +24,7 @@ export default async (req: Request) => {
     db.from("opportunities").select("*").eq("scan_id", scanId).order("fit_score", { ascending: false }),
   ]);
   const error = scan.error ?? log.error ?? opportunities.error;
-  if (error) return Response.json({ error: error.message }, { status: 500 });
+  if (error) return serverError("scan-status", error);
 
   return Response.json({ scan: scan.data, log: log.data, opportunities: opportunities.data });
 };

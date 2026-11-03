@@ -121,6 +121,7 @@ Why it fits (from the Fit agent): ${opp.reasons}${
       `Draft ready for "${opp.title}": ${count(draft.assumptions.length, "assumption")} and ${count(draft.missing_items.length, "missing item")} to check`,
     );
   } catch (err) {
-    await log(`Couldn't write the draft for "${opp.title}": ${(err as Error).message}`);
+    console.error("draft failed:", (err as Error).message);
+    await log(`Couldn't write the draft for "${opp.title}": something went wrong, try again in a minute`);
   }
 }

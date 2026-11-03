@@ -5,8 +5,26 @@ dist/
 
 # Secrets: never commit these
 .env
-.env.*
+.env*
 !.env.example
+.dev.vars
+.dev.vars*
+*.pem
+*.p8
+*.p12
+*.pfx
+*.key
+*.crt
+*.jks
+*.keystore
+id_rsa*
+id_ed25519*
+*.secret
+secrets.json
+credentials.json
+service-account*.json
+.npmrc
+.supabase/
 
 # Local editor/preview settings
 .claude/

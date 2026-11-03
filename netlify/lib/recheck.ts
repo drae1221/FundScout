@@ -39,6 +39,7 @@ export async function recheck(opportunityId: string) {
     if (saveError) throw new Error(saveError.message);
     await log(`Re-checked "${opp.title}": ${before} → ${v.verdict.toUpperCase()} (${v.fit_score})`);
   } catch (err) {
-    await log(`Couldn't re-check "${opp.title}": ${(err as Error).message}`);
+    console.error("recheck failed:", (err as Error).message);
+    await log(`Couldn't re-check "${opp.title}": something went wrong, try again in a minute`);
   }
 }

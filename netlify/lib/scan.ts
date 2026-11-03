@@ -47,7 +47,8 @@ export async function runScan(orgId: string, scanId: string, weekly = false) {
           await logStep(scanId, "Fit", `${v.verdict.toUpperCase()} (${v.fit_score}): ${c.title}`);
         } catch (err) {
           counts.failed++;
-          await logStep(scanId, "Fit", `Couldn't evaluate "${c.title}": ${(err as Error).message}`);
+          console.error(`fit ${c.title}:`, (err as Error).message);
+          await logStep(scanId, "Fit", `Couldn't evaluate "${c.title}"; it was left out of this scan`);
         }
       }
     };
@@ -60,8 +61,9 @@ export async function runScan(orgId: string, scanId: string, weekly = false) {
     await logStep(scanId, "Scan", `Done: ${counts.apply} apply, ${counts.maybe} maybe, ${counts.skip} skip`);
     if (weekly) await sendToAutomation(scanId);
   } catch (err) {
-    const message = (err as Error).message;
+    console.error("scan failed:", (err as Error).message); // details stay in the server log
+    const message = "Something went wrong. Try again in a minute.";
     await db.from("scans").update({ status: "failed", finished_at: new Date().toISOString(), error: message }).eq("id", scanId);
-    await logStep(scanId, "Scan", `Scan failed: ${message}`);
+    await logStep(scanId, "Scan", `Scan failed. ${message}`);
   }
 }

@@ -1,4 +1,5 @@
 import { db } from "../lib/db";
+import { serverError } from "../lib/http";
 
 // GET /api/opportunity?id=...: one opportunity, its latest draft and the Drafter's log lines.
 export default async (req: Request) => {
@@ -6,7 +7,7 @@ export default async (req: Request) => {
   if (!id) return Response.json({ error: "id is required" }, { status: 400 });
 
   const { data: opportunity, error } = await db.from("opportunities").select("*").eq("id", id).maybeSingle();
-  if (error) return Response.json({ error: error.message }, { status: 500 });
+  if (error) return serverError("opportunity", error);
   if (!opportunity) return Response.json({ error: "Not found" }, { status: 404 });
 
   const [org, draft, log] = await Promise.all([

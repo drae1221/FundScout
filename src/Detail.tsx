@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState, type ReactNode } from "react";
 import type { LogLine, Opportunity } from "./App";
 import { DEMO_MODE, demoChanges, demoDrafted, loadDemoRun, replay } from "./demo";
 import { FactForm } from "./Profile";
+import { isHttpUrl } from "./links";
 
 export interface Draft {
   id: string;
@@ -270,9 +271,13 @@ export default function Detail({ id }: { id: string }) {
           )}
           <h2>Original source</h2>
           <p>
-            <a href={o.url} target="_blank" rel="noreferrer" className="source-link" title={o.url}>
-              {o.url.replace(/^https?:\/\/(www\.)?/, "")} ↗
-            </a>
+            {isHttpUrl(o.url) ? (
+              <a href={o.url} target="_blank" rel="noreferrer" className="source-link" title={o.url}>
+                {o.url.replace(/^https?:\/\/(www\.)?/, "")} ↗
+              </a>
+            ) : (
+              <span>{o.url} (not a web link, so it isn't clickable)</span>
+            )}
           </p>
           <p className="hint">FundScout never submits anything. You review the draft and submit it yourself.</p>
         </section>

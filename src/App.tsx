@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import Detail from "./Detail";
 import Profile from "./Profile";
 import { DEMO_MODE, loadDemoRun, replay } from "./demo";
+import { isHttpUrl } from "./links";
 
 interface Org {
   id: string;
@@ -362,9 +363,13 @@ function OpportunityCard({ o }: { o: Opportunity }) {
       )}
       <p className="card-links">
         <a href={`#/opportunity/${o.id}`}>{o.verdict === "apply" ? "Open & draft →" : "Details →"}</a>
-        <a href={o.url} target="_blank" rel="noreferrer">
-          Source ↗
-        </a>
+        {isHttpUrl(o.url) ? (
+          <a href={o.url} target="_blank" rel="noreferrer">
+            Source ↗
+          </a>
+        ) : (
+          <span className="hint">Source: {o.url}</span>
+        )}
       </p>
     </article>
   );
