@@ -1,10 +1,17 @@
 import { useEffect, useState, type ReactNode } from "react";
+import { api, errorText, postJson } from "./auth";
 
 export interface ConfirmedFact {
   requirement: string;
   answer: string;
   added_at: string;
+  added_by?: string | null;
   from_opportunity?: string | null;
+}
+
+interface Member {
+  email: string;
+  role: "owner" | "member";
 }
 
 interface OrgProfile {
@@ -24,6 +31,7 @@ interface OrgProfile {
   industry_ties: string;
   funding_contacts: string;
   confirmed_facts?: ConfirmedFact[];
+  my_role?: "owner" | "member";
 }
 
 const BLANK: OrgProfile = {
@@ -63,13 +71,17 @@ export default function Profile({ id, onSaved }: { id: string | "new"; onSaved: 
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [members, setMembers] = useState<Member[]>([]);
 
   useEffect(() => {
     if (id === "new") return;
-    fetch(`/api/org?id=${id}`)
-      .then((r) => (r.ok ? r.json() : Promise.reject(new Error(`Couldn't load this profile (${r.status})`))))
+    api(`/api/org?id=${id}`)
+      .then(async (r) => (r.ok ? r.json() : Promise.reject(new Error(await errorText(r, "Couldn't load this profile")))))
       .then((o) => setForm(toForm(o)))
       .catch((e) => setError(e.message));
+    api(`/api/org-members?org_id=${id}`)
+      .then((r) => (r.ok ? r.json() : []))
+      .then(setMembers);
   }, [id]);
 
   const set = <K extends keyof OrgProfile>(key: K, value: OrgProfile[K]) => {
@@ -82,33 +94,33 @@ export default function Profile({ id, onSaved }: { id: string | "new"; onSaved: 
     setSaving(true);
     setError(null);
     const { confirmed_facts, ...fields } = form;
-    const res = await fetch("/api/org-save", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        ...fields,
-        id: id === "new" ? undefined : id,
-        industry_ties: splitList(form.industry_ties),
-        funding_contacts: splitList(form.funding_contacts),
-      }),
+    const { my_role, ...profile } = fields;
+    const res = await postJson("/api/org-save", {
+      ...profile,
+      id: id === "new" ? undefined : id,
+      industry_ties: splitList(form.industry_ties),
+      funding_contacts: splitList(form.funding_contacts),
     });
     setSaving(false);
-    const body = await res.json().catch(() => ({}));
-    if (!res.ok) return setError(body.error ?? `Couldn't save (${res.status})`);
+    if (!res.ok) return setError(await errorText(res, "Couldn't save"));
+    const body = await res.json();
     setSaved(true);
     if (id === "new") onSaved(body.id);
   }
 
   async function changeFacts(change: { requirement: string; answer: string } | { remove: number }) {
     setError(null);
-    const res = await fetch("/api/org-fact", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ org_id: id, ...change }),
-    });
-    const body = await res.json().catch(() => ({}));
-    if (!res.ok) return setError(body.error ?? `Couldn't save the fact (${res.status})`);
-    setForm((f) => (f ? { ...f, confirmed_facts: body } : f));
+    const res = await postJson("/api/org-fact", { org_id: id, ...change });
+    if (!res.ok) return setError(await errorText(res, "Couldn't save the fact"));
+    const facts = await res.json();
+    setForm((f) => (f ? { ...f, confirmed_facts: facts } : f));
+  }
+
+  async function changeMembers(change: { add: string } | { remove: string }) {
+    setError(null);
+    const res = await postJson("/api/org-members", { org_id: id, ...change });
+    if (!res.ok) return setError(await errorText(res, "Couldn't update members"));
+    setMembers(await res.json());
   }
 
   if (!form) {
@@ -217,7 +229,10 @@ export default function Profile({ id, onSaved }: { id: string | "new"; onSaved: 
                     <div>
                       <b>{f.requirement}</b>
                       <p>{f.answer}</p>
-                      {f.from_opportunity && <span className="hint">From: {f.from_opportunity}</span>}
+                      <span className="hint">
+                        Confirmed by {f.added_by ?? "a club officer"} on {new Date(f.added_at).toLocaleDateString()}
+                        {f.from_opportunity && ` · from "${f.from_opportunity}"`}
+                      </span>
                     </div>
                     <button className="link-button" onClick={() => changeFacts({ remove: i })} title="Remove this fact">
                       Remove
@@ -226,6 +241,29 @@ export default function Profile({ id, onSaved }: { id: string | "new"; onSaved: 
                 ))}
               </ul>
               <FactForm onAdd={(requirement, answer) => changeFacts({ requirement, answer })} />
+            </>
+          )}
+
+          {!isNew && (
+            <>
+              <h2>Members</h2>
+              <p className="hint">Only these people can see this club and run scans. They log in with this email.</p>
+              <ul className="fact-list">
+                {members.map((m) => (
+                  <li key={m.email}>
+                    <div>
+                      <b>{m.email}</b>
+                      <p className="hint">{m.role === "owner" ? "Owner (can add members)" : "Member"}</p>
+                    </div>
+                    {form.my_role === "owner" && (
+                      <button className="link-button" onClick={() => changeMembers({ remove: m.email })} title="Remove this member">
+                        Remove
+                      </button>
+                    )}
+                  </li>
+                ))}
+              </ul>
+              {form.my_role === "owner" && <AddMember onAdd={(email) => changeMembers({ add: email })} />}
             </>
           )}
         </section>
@@ -252,6 +290,27 @@ export function FactForm({ onAdd, requirement: fixed, submitLabel = "Add fact" }
       <textarea value={answer} onChange={(e) => setAnswer(e.target.value)} rows={2} placeholder="Yes, because… (e.g. our faculty advisor is in the Computer Science department)" />
       <button onClick={submit} disabled={busy || !requirement.trim() || !answer.trim()}>
         {busy ? "Saving…" : submitLabel}
+      </button>
+    </div>
+  );
+}
+
+function AddMember({ onAdd }: { onAdd: (email: string) => Promise<void> }) {
+  const [email, setEmail] = useState("");
+  const [busy, setBusy] = useState(false);
+  return (
+    <div className="fact-form">
+      <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="officer@colorado.edu" />
+      <button
+        disabled={busy || !email.trim()}
+        onClick={async () => {
+          setBusy(true);
+          await onAdd(email.trim());
+          setBusy(false);
+          setEmail("");
+        }}
+      >
+        {busy ? "Adding…" : "Add member"}
       </button>
     </div>
   );

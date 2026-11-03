@@ -1,33 +1,54 @@
 import { db } from "../lib/db";
-import { serverError } from "../lib/http";
+import { requireMember, requireUser } from "../lib/auth";
+import { isUuid, readJson, serverError } from "../lib/http";
+import { EMAIL } from "../lib/automation";
 
 // POST /api/org-save { id?, ...profile fields }
-// Creates an organization (no id) or updates one. Only the profile fields below can be set.
+// Updates an organization (members only) or creates one (anyone who already belongs to
+// an organization; the creator becomes its owner). Only the profile fields below can be set.
 const TEXT = ["name", "university", "mission", "activities", "funding_goals", "past_wins"] as const;
 const BOOL = ["is_registered_student_org", "is_501c3", "has_nonprofit_partner"] as const;
-const LIST = ["industry_ties", "funding_contacts"] as const;
 
 export default async (req: Request) => {
-  if (req.method !== "POST") return Response.json({ error: "POST only" }, { status: 405 });
-  const body = await req.json().catch(() => null);
-  if (!body || typeof body !== "object") return Response.json({ error: "Bad request" }, { status: 400 });
+  const body = await readJson(req);
+  if (body instanceof Response) return body;
+  if (body.id !== undefined && !isUuid(body.id)) return Response.json({ error: "Bad id" }, { status: 400 });
 
   const row: Record<string, unknown> = {};
-  for (const k of TEXT) if (k in body) row[k] = typeof body[k] === "string" && body[k].trim() ? body[k].trim().slice(0, 2000) : null;
-  for (const k of BOOL) if (k in body) row[k] = Boolean(body[k]);
-  for (const k of LIST) {
-    if (Array.isArray(body[k])) row[k] = body[k].map((x: unknown) => String(x).trim()).filter(Boolean).slice(0, 20);
+  for (const k of TEXT) if (k in body) row[k] = typeof body[k] === "string" && (body[k] as string).trim() ? (body[k] as string).trim().slice(0, 2000) : null;
+  for (const k of BOOL) if (k in body) row[k] = body[k] === true;
+  if (Array.isArray(body.industry_ties)) row.industry_ties = body.industry_ties.map((x) => String(x).trim().slice(0, 60)).filter(Boolean).slice(0, 20);
+  if (Array.isArray(body.funding_contacts)) {
+    const emails = body.funding_contacts.map((x) => String(x).trim().toLowerCase()).filter(Boolean);
+    const bad = emails.filter((e) => !EMAIL.test(e));
+    if (bad.length) return Response.json({ error: `Not a valid email: ${bad[0].slice(0, 80)}` }, { status: 400 });
+    row.funding_contacts = emails.slice(0, 10);
   }
   if ("type" in body) row.type = body.type === "nonprofit" ? "nonprofit" : "student_club";
   for (const k of ["member_count", "target_amount"]) {
-    if (k in body) row[k] = body[k] === "" || body[k] === null || isNaN(Number(body[k])) ? null : Number(body[k]);
+    if (k in body) row[k] = body[k] === "" || body[k] === null || isNaN(Number(body[k])) ? null : Math.max(0, Number(body[k]));
   }
   if (!body.id && !row.name) return Response.json({ error: "Name is required" }, { status: 400 });
   if ("name" in row && !row.name) return Response.json({ error: "Name can't be empty" }, { status: 400 });
 
-  const query = body.id ? db.from("orgs").update(row).eq("id", body.id) : db.from("orgs").insert(row);
-  const { data, error } = await query.select().single();
+  if (body.id) {
+    const auth = await requireMember(req, body.id as string);
+    if (auth instanceof Response) return auth;
+    const { data, error } = await db.from("orgs").update(row).eq("id", body.id).select().single();
+    if (error) return serverError("org-save", error);
+    return Response.json(data);
+  }
+
+  // New organization: only people who already belong to one can create more.
+  const user = await requireUser(req);
+  if (user instanceof Response) return user;
+  const { data: mine } = await db.from("org_members").select("org_id").eq("email", user.email).limit(1);
+  if (!mine?.length) return Response.json({ error: "Ask a club officer to add you as a member first." }, { status: 403 });
+
+  const { data, error } = await db.from("orgs").insert(row).select().single();
   if (error) return serverError("org-save", error);
+  const { error: memberError } = await db.from("org_members").insert({ org_id: data.id, email: user.email, role: "owner", added_by: user.email });
+  if (memberError) return serverError("org-save", memberError);
   return Response.json(data);
 };
 

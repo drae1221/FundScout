@@ -2,7 +2,7 @@ import { createHmac, timingSafeEqual } from "node:crypto";
 import { db, logStep } from "./db";
 import { isHttpUrl } from "./http";
 
-const EMAIL = /^[^\s@<>,;"]+@[^\s@<>,;"]+\.[a-z]{2,}$/i;
+export const EMAIL = /^[^\s@<>,;"]+@[^\s@<>,;"]+\.[a-z]{2,}$/i;
 
 // The token n8n must send back to write to one scan's activity log. It is derived from
 // AUTOMATION_LOG_SECRET, so it only works for that scan and can't be guessed.
@@ -76,6 +76,7 @@ export async function sendToAutomation(scanId: string) {
       body: JSON.stringify(payload),
     });
     if (!res.ok) throw new Error(`n8n returned ${res.status}`);
+    await db.from("scans").update({ digest_sent_at: new Date().toISOString() }).eq("id", scanId);
     await logStep(scanId, "Automation", `Sent ${payload.apply_opportunities.length} Apply matches to the n8n automation`);
   } catch (err) {
     console.error("n8n hand-off failed:", (err as Error).message);

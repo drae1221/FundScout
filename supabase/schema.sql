@@ -2,7 +2,7 @@
 -- Run this once in Supabase: Dashboard → SQL Editor → New query → paste → Run.
 -- Safe to re-run: it drops and recreates the tables (this DELETES their data).
 
-drop table if exists activity_log, drafts, opportunities, scans, funding_library, orgs cascade;
+drop table if exists org_members, activity_log, drafts, opportunities, scans, funding_library, orgs cascade;
 
 create table orgs (
   id uuid primary key default gen_random_uuid(),
@@ -20,7 +20,7 @@ create table orgs (
   past_wins text,
   industry_ties text[] not null default '{}',
   funding_contacts text[] not null default '{}',
-  confirmed_facts jsonb not null default '[]'::jsonb, -- [{requirement, answer, added_at, from_opportunity}]
+  confirmed_facts jsonb not null default '[]'::jsonb, -- [{requirement, answer, added_at, added_by, from_opportunity}]
   created_at timestamptz not null default now()
 );
 
@@ -46,7 +46,9 @@ create table scans (
   sources_checked text[] not null default '{}',
   counts jsonb not null default '{}',
   status text not null default 'running' check (status in ('running', 'done', 'failed')),
-  error text
+  error text,
+  started_by text,           -- email of the member who started it
+  digest_sent_at timestamptz -- for the 1-hour resend cooldown
 );
 
 create table opportunities (
@@ -62,6 +64,10 @@ create table opportunities (
   amount text,
   deadline date,
   deadline_verified boolean not null default false, -- guardrail: "verify on source" until a human confirms
+  deadline_verified_by text,
+  deadline_verified_at timestamptz,
+  status_changed_by text,
+  status_changed_at timestamptz,
   verdict text check (verdict in ('apply', 'maybe', 'skip')),
   fit_score integer check (fit_score between 0 and 100),
   reasons text,
@@ -88,6 +94,17 @@ create table activity_log (
   created_at timestamptz not null default now()
 );
 
+-- Who belongs to which organization (by login email, lower-case).
+create table org_members (
+  org_id uuid not null references orgs(id) on delete cascade,
+  email text not null check (email = lower(email)),
+  role text not null default 'member' check (role in ('owner', 'member')),
+  added_by text,
+  created_at timestamptz not null default now(),
+  primary key (org_id, email)
+);
+
+create index on org_members (email);
 create index on opportunities (org_id, verdict);
 create index on activity_log (scan_id, created_at);
 
@@ -99,3 +116,5 @@ alter table scans enable row level security;
 alter table opportunities enable row level security;
 alter table drafts enable row level security;
 alter table activity_log enable row level security;
+alter table org_members enable row level security;
+revoke all on all tables in schema public from anon, authenticated;

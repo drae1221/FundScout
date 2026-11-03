@@ -981,3 +981,21 @@ mark.missing {
     font-size: 1.4rem;
   }
 }
+
+/* Login and signed-in user */
+.login {
+  max-width: 460px;
+  margin: 48px auto;
+}
+.login .fact-form input {
+  font-size: 1rem;
+}
+.user {
+  font-size: 0.85rem;
+  color: inherit;
+  opacity: 0.85;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 260px;
+}

@@ -29,6 +29,7 @@ export interface ConfirmedFact {
   requirement: string;
   answer: string;
   added_at: string;
+  added_by?: string | null; // email of the member who confirmed it
   from_opportunity?: string | null;
 }
 

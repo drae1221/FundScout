@@ -1,14 +1,19 @@
 import { db } from "../lib/db";
-import { serverError } from "../lib/http";
+import { notMember, requireUser, roleIn } from "../lib/auth";
+import { isUuid, serverError } from "../lib/http";
 
 // GET /api/opportunity?id=...: one opportunity, its latest draft and the Drafter's log lines.
+// Members of the opportunity's club only.
 export default async (req: Request) => {
+  const user = await requireUser(req);
+  if (user instanceof Response) return user;
   const id = new URL(req.url).searchParams.get("id");
-  if (!id) return Response.json({ error: "id is required" }, { status: 400 });
+  if (!isUuid(id)) return Response.json({ error: "id is required" }, { status: 400 });
 
   const { data: opportunity, error } = await db.from("opportunities").select("*").eq("id", id).maybeSingle();
   if (error) return serverError("opportunity", error);
-  if (!opportunity) return Response.json({ error: "Not found" }, { status: 404 });
+  // Unknown id and "not your club" look the same, so ids can't be probed.
+  if (!opportunity || !(await roleIn(user, opportunity.org_id))) return notMember();
 
   const [org, draft, log] = await Promise.all([
     db.from("orgs").select("id,name").eq("id", opportunity.org_id).single(),

@@ -9,7 +9,8 @@ const FIT_CONCURRENCY = 4; // Fit agents running at once
 // Results are saved as they arrive so the dashboard fills in live.
 // weekly = the scheduled/"Run weekly scan now" scan, which also hands results to n8n.
 export async function runScan(orgId: string, scanId: string, weekly = false) {
-  const { error: scanError } = await db.from("scans").insert({ id: scanId, org_id: orgId, status: "running" });
+  // /api/scan-start already created the scan row; local scripts haven't.
+  const { error: scanError } = await db.from("scans").upsert({ id: scanId, org_id: orgId, status: "running" }, { onConflict: "id", ignoreDuplicates: true });
   if (scanError) throw new Error(scanError.message);
 
   try {

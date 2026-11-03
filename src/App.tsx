@@ -3,6 +3,8 @@ import Detail from "./Detail";
 import Profile from "./Profile";
 import { DEMO_MODE, loadDemoRun, replay } from "./demo";
 import { isHttpUrl } from "./links";
+import Login from "./Login";
+import { api, errorText, logOut, postJson, useSession } from "./auth";
 
 interface Org {
   id: string;
@@ -25,6 +27,8 @@ export interface Opportunity {
   reasons: string;
   eligibility_flags: string[];
   status: "new" | "in_progress" | "submitted" | "dismissed";
+  deadline_verified_by?: string | null;
+  deadline_verified_at?: string | null;
 }
 
 export interface LogLine {
@@ -47,7 +51,7 @@ const VERDICTS = [
 ] as const;
 
 async function getJson<T>(url: string): Promise<T> {
-  const res = await fetch(url);
+  const res = await api(url);
   if (!res.ok) throw new Error(`${url} returned ${res.status}`);
   return res.json();
 }
@@ -70,7 +74,16 @@ function useRoute() {
   };
 }
 
+// Everything except the cached demo needs a logged-in club member.
 export default function App() {
+  const { session, ready } = useSession();
+  if (DEMO_MODE) return <Pipeline email={null} />;
+  if (!ready) return <div className="app"><p className="empty">Loading…</p></div>;
+  if (!session) return <Login />;
+  return <Pipeline email={session.user.email ?? null} />;
+}
+
+function Pipeline({ email }: { email: string | null }) {
   const { opportunityId, profileId } = useRoute();
   const [orgs, setOrgs] = useState<Org[]>([]);
   const [orgId, setOrgId] = useState("");
@@ -103,7 +116,7 @@ export default function App() {
         setOrgs(list);
         setOrgId((current) => select ?? (current || list[0]?.id || ""));
       })
-      .catch(() => setError("Couldn't load clubs. Is the backend running?"));
+      .catch(() => setError("Couldn't load your clubs. Try reloading the page."));
   }
 
   // Coming back from the profile page: names may have changed.
@@ -188,20 +201,13 @@ export default function App() {
   async function findFunding(weekly = false) {
     setError(null);
     if (DEMO_MODE) return replayDemo();
-    const scanId = crypto.randomUUID();
     setData(EMPTY);
     setAutomationUntil(0);
-    setWeeklyScanId(weekly ? scanId : null);
-    setActiveScanId(scanId);
-    const res = await fetch("/.netlify/functions/scan-background", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ org_id: orgId, scan_id: scanId, weekly }),
-    });
-    if (!res.ok) {
-      setActiveScanId(null);
-      setError(`Couldn't start the scan (${res.status})`);
-    }
+    const res = await postJson("/api/scan-start", { org_id: orgId, weekly });
+    if (!res.ok) return setError(await errorText(res, "Couldn't start the scan"));
+    const { scan_id } = await res.json();
+    setWeeklyScanId(weekly ? scan_id : null);
+    setActiveScanId(scan_id);
   }
 
   const running = activeScanId !== null;
@@ -252,8 +258,18 @@ export default function App() {
           <button className="primary" onClick={() => findFunding()} disabled={!orgId || running}>
             {running ? "Scanning…" : "Find funding"}
           </button>
+          {email && (
+            <span className="user" title={email}>
+              {email} · <button className="link-button" onClick={() => logOut()}>Log out</button>
+            </span>
+          )}
         </div>
       </header>
+      {!DEMO_MODE && email && orgs.length === 0 && !error && (
+        <p className="demo-banner">
+          You're logged in as <b>{email}</b>, but you aren't a member of any club yet. Ask a club owner to add this email on their Profile page.
+        </p>
+      )}
 
       {DEMO_MODE && (
         <p className="demo-banner">

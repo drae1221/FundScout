@@ -3,6 +3,7 @@ import type { LogLine, Opportunity } from "./App";
 import { DEMO_MODE, demoChanges, demoDrafted, loadDemoRun, replay } from "./demo";
 import { FactForm } from "./Profile";
 import { isHttpUrl } from "./links";
+import { api, errorText, postJson } from "./auth";
 
 export interface Draft {
   id: string;
@@ -52,8 +53,8 @@ export default function Detail({ id }: { id: string }) {
       setData(d);
       return d;
     }
-    const res = await fetch(`/api/opportunity?id=${id}`);
-    if (!res.ok) throw new Error(`Couldn't load this opportunity (${res.status})`);
+    const res = await api(`/api/opportunity?id=${id}`);
+    if (!res.ok) throw new Error(await errorText(res, "Couldn't load this opportunity"));
     const d: DetailData = await res.json();
     setData(d);
     return d;
@@ -95,13 +96,8 @@ export default function Detail({ id }: { id: string }) {
   async function confirmFlag(requirement: string, answer: string) {
     if (!data) return;
     setError(null);
-    const res = await fetch("/api/org-fact", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ org_id: data.opportunity.org_id, requirement, answer, from_opportunity: data.opportunity.title }),
-    });
-    const body = await res.json().catch(() => ({}));
-    if (!res.ok) return setError(body.error ?? `Couldn't save (${res.status})`);
+    const res = await postJson("/api/org-fact", { org_id: data.opportunity.org_id, requirement, answer, from_opportunity: data.opportunity.title });
+    if (!res.ok) return setError(await errorText(res, "Couldn't save"));
     setConfirmed((c) => [...c, requirement]);
     setAnswering(null);
   }
@@ -110,14 +106,10 @@ export default function Detail({ id }: { id: string }) {
     if (!data) return;
     setError(null);
     setRechecking({ logLength: data.log.length });
-    const res = await fetch("/.netlify/functions/recheck-background", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ opportunity_id: id }),
-    });
+    const res = await postJson("/api/recheck-start", { opportunity_id: id });
     if (!res.ok) {
       setRechecking(null);
-      setError(`Couldn't start the re-check (${res.status})`);
+      setError(await errorText(res, "Couldn't start the re-check"));
     }
   }
 
@@ -142,14 +134,10 @@ export default function Detail({ id }: { id: string }) {
       }, 4);
       return;
     }
-    const res = await fetch("/.netlify/functions/draft-background", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ opportunity_id: id }),
-    });
+    const res = await postJson("/api/draft-start", { opportunity_id: id });
     if (!res.ok) {
       setDrafting(null);
-      setError(`Couldn't start the Drafter (${res.status})`);
+      setError(await errorText(res, "Couldn't start the Drafter"));
     }
   }
 
@@ -159,12 +147,8 @@ export default function Detail({ id }: { id: string }) {
       demoChanges[id] = { ...demoChanges[id], ...(changes as Partial<Opportunity>) };
       return setData((d) => (d ? { ...d, opportunity: { ...d.opportunity, ...demoChanges[id] } } : d));
     }
-    const res = await fetch("/api/opportunity-update", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id, ...changes }),
-    });
-    if (!res.ok) return setError(`Couldn't save (${res.status})`);
+    const res = await postJson("/api/opportunity-update", { id, ...changes });
+    if (!res.ok) return setError(await errorText(res, "Couldn't save"));
     const opportunity: Opportunity = await res.json();
     setData((d) => (d ? { ...d, opportunity } : d));
   }
@@ -261,7 +245,10 @@ export default function Detail({ id }: { id: string }) {
           <p>
             {o.deadline ?? "Not stated. Check the source."}
             {o.deadline_verified ? (
-              <span className="badge badge-apply">verified</span>
+              <span className="badge badge-apply">
+                verified{o.deadline_verified_by ? ` by ${o.deadline_verified_by}` : ""}
+                {o.deadline_verified_at ? ` on ${new Date(o.deadline_verified_at).toLocaleDateString()}` : ""}
+              </span>
             ) : (
               <span className="badge badge-verify">verify on source</span>
             )}

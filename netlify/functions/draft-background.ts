@@ -1,13 +1,18 @@
 import { writeDraft } from "../lib/drafter";
+import { isInternalRequest } from "../lib/background";
+import { isUuid } from "../lib/http";
 
 // Background function: answers 202 right away; the detail page polls /api/opportunity meanwhile.
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-
+// Only /api/draft-start (after checking login and membership) may start it.
 export default async (req: Request) => {
-  const { opportunity_id } = await req.json();
-  if (!UUID.test(opportunity_id ?? "")) {
+  if (!isInternalRequest(req)) {
+    console.error("draft-background: ignored a request without the internal token");
+    return;
+  }
+  const body = await req.json().catch(() => null);
+  if (!isUuid(body?.opportunity_id)) {
     console.error("draft-background: invalid opportunity_id");
     return;
   }
-  await writeDraft(opportunity_id);
+  await writeDraft(body.opportunity_id);
 };
