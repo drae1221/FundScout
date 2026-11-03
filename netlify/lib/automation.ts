@@ -25,11 +25,7 @@ export async function sendToAutomation(scanId: string) {
   const secret = process.env.N8N_WEBHOOK_SECRET;
   const token = logToken(scanId);
   if (!url || !secret || !token) {
-    // TEMPORARY (setup check): names only, never values. Remove once n8n works.
-    const state = (n: string) => (process.env[n] === undefined ? "missing" : process.env[n]!.trim() === "" ? "empty" : "set");
-    const status = ["N8N_WEBHOOK_URL", "N8N_WEBHOOK_SECRET", "AUTOMATION_LOG_SECRET"].map((n) => `${n}=${state(n)}`).join(", ");
-    const similar = Object.keys(process.env).filter((n) => /N8N|WEBHOOK|SECRET/i.test(n)).map((n) => JSON.stringify(n)).join(", ");
-    await logStep(scanId, "Automation", `Setup check: ${status}. Similar names the server sees: ${similar || "none"}`);
+    await logStep(scanId, "Automation", "The n8n automation isn't set up yet, so no email or calendar events");
     return;
   }
 
@@ -83,6 +79,6 @@ export async function sendToAutomation(scanId: string) {
     await logStep(scanId, "Automation", `Sent ${payload.apply_opportunities.length} Apply matches to the n8n automation`);
   } catch (err) {
     console.error("n8n hand-off failed:", (err as Error).message);
-    await logStep(scanId, "Automation", `Couldn't reach the n8n automation (TEMPORARY detail: ${(err as Error).message})`);
+    await logStep(scanId, "Automation", "Couldn't reach the n8n automation");
   }
 }
