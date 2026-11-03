@@ -4,7 +4,7 @@
 
 Student clubs mostly use one funding source. FundScout checks CU Boulder's student funds, federal grants and the web for a club, decides which opportunities are worth pursuing, drafts the request, and sends the treasurer a weekly digest with deadlines on their calendar.
 
-- **Live app:** https://fundscout-cu.netlify.app
+- **Live app:** https://fundscout-cu.netlify.app (club officers log in with an email link)
 - **Cached demo run** (replays a saved scan, no live AI calls): https://fundscout-cu.netlify.app/?demo
 
 CU Boulder Applied AI Development capstone, November 2026. Full spec: [CLAUDE.md](CLAUDE.md).
@@ -34,10 +34,21 @@ Run weekly scan now ──► scan ──► n8n automation ──► calendar e
 ## Guardrails
 
 - Every opportunity links to its original source, and only links that came from a real search result are kept.
-- Deadlines show "verify on source" until a person confirms them.
+- Deadlines show "verify on source" on the cards, the detail page, the digest email and the calendar until a logged-in club member clicks "I checked the deadline on the source". The server only accepts that from a member and records who confirmed it and when.
 - Drafts use only facts from the club profile. Guesses are highlighted, and missing facts are listed for the human to supply.
 - FundScout never submits anything; a person always does.
 - Every scan and digest lists the sources that were checked.
+
+## Security
+
+- **Login:** club officers log in with a one-time email link (Supabase Auth). The cached demo at `/?demo` needs no login because it replays a saved file and never touches the database.
+- **Membership checks:** every API function that reads or changes club data uses `netlify/lib/auth.ts`. It verifies the login token (**401** if missing or invalid) and checks the `org_members` table (**403** if you aren't in the club). The club is always looked up from the database (from the opportunity or scan), never trusted from the browser. Owners add officers by email on the Profile page.
+- **Database lock:** every table has Row Level Security with no policies, and the public roles have no table rights. The browser's public key can't read or write anything; only the server, using the service key, can. The service key never reaches the browser.
+- **Background jobs:** scans, drafts and re-checks start through `/api/*-start`, which checks login and membership. The background functions ignore any request without an internal token.
+- **n8n secrets:** FundScout calls the n8n webhook with an `X-FundScout-Secret` header (n8n Header Auth), at an unguessable path. n8n writes to the activity log only with a per-scan token signed with `AUTOMATION_LOG_SECRET`. The digest goes only to the club's saved addresses, looked up on the server, and every title, provider and reason is HTML-escaped, with only `http(s)` links.
+- **Spending limits** (`netlify/lib/limits.ts`): per club, 5 scans, 20 drafts and 20 re-checks a day, and only one scan running at a time (enforced by the database). Digest re-sends are limited to once an hour per club. Request bodies are capped at 10 KB and checked for type.
+- **Prompt-injection protection:** agents read pages through FundScout's own reader, which strips HTML, cuts pages to 15,000 characters and wraps them in `<untrusted_page>` markers. The prompts say that text is data, not instructions, and the reading tools can only open that opportunity's own link. Code checks every verdict (allowed values, score 0–100, HTML stripped, length caps) and applies hard rules the AI can't override: a 501(c)(3)-only opportunity can't be "Apply" for a club without that status or a partner, and a passed deadline can't be "Apply". Confirmed facts come only from members and are labeled with who confirmed them and when. This reduces the risk but can't remove it entirely, which is why a person always reviews and submits.
+- **Other:** links are clickable only if they are `http(s)`, errors shown in the browser are generic (details stay in the server log), `/api/health` reveals nothing, and `.gitignore` blocks key files.
 
 ## Stack
 
@@ -67,8 +78,8 @@ npm run draft -- <opportunity id>          # write a draft for one opportunity
 npm run save-demo -- <scan id>             # save a finished scan as the cached demo run
 ```
 
-**Database (Supabase):** create a project, then in the SQL Editor run `supabase/schema.sql` and then `supabase/seed.sql`. (Existing databases: run the files in `supabase/migrations/` in order.) Put the Project URL and the `service_role` key in `.env` and in Netlify's environment variables.
+**Database (Supabase):** create a project, then in the SQL Editor run `supabase/schema.sql` and then `supabase/seed.sql`. (Existing databases: run the files in `supabase/migrations/` in order.) Then add yourself as an owner: `insert into org_members (org_id, email, role) select id, 'you@example.com', 'owner' from orgs;` Put the Project URL and the `service_role` key in `.env` and in Netlify's environment variables.
 
-**Deploy (Netlify):** import this repo in Netlify; `netlify.toml` sets the build. Add `ANTHROPIC_API_KEY`, `SUPABASE_URL`, `SUPABASE_SERVICE_KEY` and `N8N_WEBHOOK_URL` as environment variables, then check `/api/health`.
+**Deploy (Netlify):** import this repo in Netlify; `netlify.toml` sets the build. Add these environment variables: `ANTHROPIC_API_KEY`, `SUPABASE_URL`, `SUPABASE_SERVICE_KEY`, `N8N_WEBHOOK_URL`, `N8N_WEBHOOK_SECRET`, `AUTOMATION_LOG_SECRET`, `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` (the last two are public by design). In Supabase → Authentication → URL Configuration, set the Site URL to the live site and add it to the Redirect URLs. Then check that `/api/health` says `{"ok":true}`.
 
-**Automation (n8n):** import `automation/n8n-workflow.json`, connect Google Calendar and Gmail, put the digest recipient in step 3, publish the workflow, and set its production webhook URL as `N8N_WEBHOOK_URL`.
+**Automation (n8n):** import `automation/n8n-workflow.json` and connect Google Calendar and Gmail. On the webhook node, set Header Auth (header `X-FundScout-Secret`, value = `N8N_WEBHOOK_SECRET`) and a random path. The Code steps are also in `automation/code/`. Publish the workflow, then set its production webhook URL as `N8N_WEBHOOK_URL`. Digest recipients come from each club's profile.
