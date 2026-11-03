@@ -3,6 +3,7 @@ import { db } from "../lib/db";
 import { requireMember } from "../lib/auth";
 import { startBackground } from "../lib/background";
 import { isUuid, readJson, serverError } from "../lib/http";
+import { LIMITS, useAllowance } from "../lib/limits";
 
 // POST /api/scan-start { org_id, weekly? }  → 202 { scan_id }
 // "Find funding" and "Run weekly scan now". Only members of the club can start a scan,
@@ -16,8 +17,20 @@ export default async (req: Request) => {
   const auth = await requireMember(req, body.org_id);
   if (auth instanceof Response) return auth;
 
+  // One scan at a time per club (the database enforces it). A scan stuck on "running"
+  // for too long crashed, so close it first.
+  const stale = new Date(Date.now() - LIMITS.staleScanMinutes * 60_000).toISOString();
+  await db.from("scans").update({ status: "failed", finished_at: new Date().toISOString(), error: "Stopped: took too long." })
+    .eq("org_id", body.org_id).eq("status", "running").lt("started_at", stale);
+  const { data: running } = await db.from("scans").select("id").eq("org_id", body.org_id).eq("status", "running").limit(1);
+  if (running?.length) return Response.json({ error: "A scan is already running for this club. Wait for it to finish." }, { status: 409 });
+
+  const overLimit = await useAllowance(body.org_id, "scan", auth.user.email);
+  if (overLimit) return overLimit;
+
   const scanId = randomUUID();
   const { error } = await db.from("scans").insert({ id: scanId, org_id: body.org_id, status: "running", started_by: auth.user.email });
+  if (error?.code === "23505") return Response.json({ error: "A scan is already running for this club. Wait for it to finish." }, { status: 409 });
   if (error) return serverError("scan-start", error);
 
   if (!(await startBackground("scan-background", { org_id: body.org_id, scan_id: scanId, weekly: body.weekly === true }))) {

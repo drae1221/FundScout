@@ -1,13 +1,15 @@
 import { db, logStep } from "../lib/db";
 import { validLogToken } from "../lib/automation";
+import { readJson } from "../lib/http";
 
 // POST /api/automation-log { scan_id, message }, header X-FundScout-Log-Token
 // n8n calls this after each step so the step shows in the dashboard's activity log.
 // Only n8n has the token (FundScout sends it with each scan), so nobody else can
 // write "Automation" lines.
 export default async (req: Request) => {
-  if (req.method !== "POST") return Response.json({ error: "POST only" }, { status: 405 });
-  const { scan_id, message } = await req.json().catch(() => ({}));
+  const body = await readJson(req);
+  if (body instanceof Response) return body;
+  const { scan_id, message } = body;
   if (typeof scan_id !== "string" || typeof message !== "string" || !message.trim()) {
     return Response.json({ error: "scan_id and message are required" }, { status: 400 });
   }

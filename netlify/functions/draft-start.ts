@@ -2,6 +2,7 @@ import { db } from "../lib/db";
 import { notMember, requireUser, roleIn } from "../lib/auth";
 import { startBackground } from "../lib/background";
 import { isUuid, readJson } from "../lib/http";
+import { useAllowance } from "../lib/limits";
 
 // POST /api/draft-start { opportunity_id }  → 202
 // The detail page's "Write draft" button. Only members of the opportunity's club can start it.
@@ -15,6 +16,8 @@ export default async (req: Request) => {
   // The club comes from the database, not from the browser.
   const { data: opp } = await db.from("opportunities").select("org_id").eq("id", body.opportunity_id).maybeSingle();
   if (!opp || !(await roleIn(user, opp.org_id))) return notMember();
+  const overLimit = await useAllowance(opp.org_id, "draft", user.email);
+  if (overLimit) return overLimit;
 
   if (!(await startBackground("draft-background", { opportunity_id: body.opportunity_id }))) {
     return Response.json({ error: "Couldn't start. Try again." }, { status: 502 });
