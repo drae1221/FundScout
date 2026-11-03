@@ -144,6 +144,7 @@ const normalizeUrl = (u: string) => u.trim().replace(/\/+$/, "");
 export async function scout(org: Org, scanId: string): Promise<{ candidates: Candidate[]; sourcesChecked: string[] }> {
   const seenUrls = new Set<string>(); // guardrail: every candidate URL must come from a real result
   const libraryUrls = new Map<string, string>();
+  const libraryNames = new Map<string, string>();
   const sourcesChecked = new Set<string>();
   const loggedQueries = new Set<string>();
 
@@ -158,6 +159,7 @@ export async function scout(org: Org, scanId: string): Promise<{ candidates: Can
       data.forEach((row) => {
         seenUrls.add(normalizeUrl(row.url));
         libraryUrls.set(row.id, row.url);
+        libraryNames.set(row.id, row.name.toLowerCase());
       });
       await logStep(scanId, "Scout", `Checked the FundScout funding library: ${data.length} sources`);
       return JSON.stringify(data);
@@ -228,9 +230,18 @@ export async function scout(org: Org, scanId: string): Promise<{ candidates: Can
     c.amount = c.amount ? plain(c.amount, 120) || null : null;
     if (!["library", "grants_gov", "web"].includes(c.source)) c.source = "web";
     if (!c.title) continue;
-    if (c.source !== "library" || !c.library_id) c.library_id = null;
+    // library_id must be a real funding_library row the Scout was shown. If the model made one up
+    // (or left it blank), find the entry by its link, and by name when several funds share a page.
+    // If it's still unclear, leave the id empty rather than guess.
+    if (c.source === "library" && !(c.library_id && libraryUrls.has(c.library_id))) {
+      const sameUrl = [...libraryUrls].filter(([, url]) => normalizeUrl(url) === normalizeUrl(c.url)).map(([id]) => id);
+      const byName = sameUrl.filter((id) => c.title.toLowerCase().includes(libraryNames.get(id)!) || libraryNames.get(id)!.includes(c.title.toLowerCase()));
+      c.library_id = sameUrl.length === 1 ? sameUrl[0] : byName.length === 1 ? byName[0] : null;
+      if (!sameUrl.length) c.source = "web";
+    }
+    if (c.source !== "library") c.library_id = null;
     // Library entries always link to the stored official page.
-    if (c.source === "library" && c.library_id && libraryUrls.has(c.library_id)) c.url = libraryUrls.get(c.library_id)!;
+    if (c.library_id) c.url = libraryUrls.get(c.library_id)!;
     if (!isHttpUrl(c.url)) {
       await logStep(scanId, "Scout", `Dropped "${c.title}": its link isn't a normal web address`);
       continue;

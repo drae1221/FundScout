@@ -29,7 +29,7 @@ export async function runScan(orgId: string, scanId: string, weekly = false) {
             org_id: org.id,
             scan_id: scanId,
             source: c.source,
-            library_id: c.library_id,
+            library_id: c.library_id || null,
             audience: c.audience,
             title: c.title,
             provider: c.provider,

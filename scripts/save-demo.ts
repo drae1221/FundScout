@@ -31,7 +31,8 @@ for (const o of opportunities) {
 const run = {
   saved_at: new Date().toISOString(),
   org,
-  scan: { ...scan, status: "done" },
+  // Only what the replay needs: the file is public, so no "who started it" or other private fields.
+  scan: { id: scan.id, status: "done", sources_checked: scan.sources_checked, error: null },
   log: log.filter((l) => l.step !== "Drafter" && l.step !== "Automation"), // the demo replays "Find funding"
   opportunities: opportunities.map((o) => ({ ...o, status: "new" })),
   drafts,

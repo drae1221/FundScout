@@ -5,3 +5,13 @@
 
 [build.environment]
   NODE_VERSION = "22"
+
+# Security headers for every page.
+# CSP: the app only loads its own files and talks to its own API and to Supabase (login).
+[[headers]]
+  for = "/*"
+  [headers.values]
+    Content-Security-Policy = "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'self' https://vnadwjzjrzyuyizrsjzk.supabase.co; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'; upgrade-insecure-requests"
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
