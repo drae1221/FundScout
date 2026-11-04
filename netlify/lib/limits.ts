@@ -1,36 +1,36 @@
 import { db } from "./db";
 
-// Spending limits for paid AI calls, per organization. Change the numbers here.
+// Spending limits for paid AI calls. Change the numbers here.
 export const LIMITS = {
-  scan: 5, // scans per club per day (each scan runs the Scout plus one Fit agent per candidate)
-  draft: 20, // drafts per club per day
-  recheck: 20, // re-checks per club per day
+  perOrg: { scan: 5, draft: 20, recheck: 20 }, // per club per day
+  perUser: { scan: 8, draft: 30, recheck: 30 }, // per person per day, across all their clubs
+  newOrgsPerUser: 3, // organizations one person can create (also in migration 007's trigger)
   staleScanMinutes: 20, // a scan still "running" after this long is treated as crashed
 };
 
 type Kind = "scan" | "draft" | "recheck";
 const LABEL: Record<Kind, string> = { scan: "scans", draft: "drafts", recheck: "re-checks" };
 
-// Checks the club's last 24 hours. Returns a 429 response if the limit is reached;
-// otherwise records this job and returns null.
+// Checks the last 24 hours and records this job in one database transaction
+// (use_allowance in migration 007), so parallel requests can't slip past a limit.
+// Returns a 429 response if a limit is reached, otherwise null.
 export async function useAllowance(orgId: string, kind: Kind, email: string): Promise<Response | null> {
-  const since = new Date(Date.now() - 24 * 3600 * 1000).toISOString();
-  const { count, error } = await db
-    .from("usage_events")
-    .select("id", { count: "exact", head: true })
-    .eq("org_id", orgId)
-    .eq("kind", kind)
-    .gte("created_at", since);
+  const { data, error } = await db.rpc("use_allowance", {
+    p_org: orgId,
+    p_kind: kind,
+    p_email: email,
+    p_org_limit: LIMITS.perOrg[kind],
+    p_user_limit: LIMITS.perUser[kind],
+  });
   if (error) {
     console.error("usage check failed:", error.message);
     return Response.json({ error: "Something went wrong." }, { status: 500 });
   }
-  if ((count ?? 0) >= LIMITS[kind]) {
-    return Response.json(
-      { error: `Daily limit reached: this club can run ${LIMITS[kind]} ${LABEL[kind]} per day. Try again tomorrow.` },
-      { status: 429 },
-    );
+  if (data === "org_limit") {
+    return Response.json({ error: `Daily limit reached: each club can run ${LIMITS.perOrg[kind]} ${LABEL[kind]} per day. Try again tomorrow.` }, { status: 429 });
   }
-  await db.from("usage_events").insert({ org_id: orgId, kind, user_email: email });
+  if (data === "user_limit") {
+    return Response.json({ error: `Daily limit reached: each person can run ${LIMITS.perUser[kind]} ${LABEL[kind]} per day across all their clubs. Try again tomorrow.` }, { status: 429 });
+  }
   return null;
 }

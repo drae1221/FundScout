@@ -2,10 +2,12 @@ import { db } from "../lib/db";
 import { requireMember, requireUser } from "../lib/auth";
 import { isUuid, readJson, serverError } from "../lib/http";
 import { EMAIL } from "../lib/automation";
+import { LIMITS } from "../lib/limits";
 
 // POST /api/org-save { id?, ...profile fields }
 // Updates an organization (members only) or creates one (anyone who already belongs to
-// an organization; the creator becomes its owner). Only the profile fields below can be set.
+// an organization, up to LIMITS.newOrgsPerUser; the creator becomes its owner).
+// Only the profile fields below can be set.
 const TEXT = ["name", "university", "mission", "activities", "funding_goals", "past_wins"] as const;
 const BOOL = ["is_registered_student_org", "is_501c3", "has_nonprofit_partner"] as const;
 
@@ -45,7 +47,14 @@ export default async (req: Request) => {
   const { data: mine } = await db.from("org_members").select("org_id").eq("email", user.email).limit(1);
   if (!mine?.length) return Response.json({ error: "Ask a club officer to add you as a member first." }, { status: 403 });
 
-  const { data, error } = await db.from("orgs").insert(row).select().single();
+  // Each new club gets its own daily allowance, so cap how many one person can create.
+  // The database trigger from migration 007 enforces the same cap inside the insert.
+  const tooMany = Response.json({ error: `You can create up to ${LIMITS.newOrgsPerUser} organizations.` }, { status: 429 });
+  const { count } = await db.from("orgs").select("id", { count: "exact", head: true }).eq("created_by", user.email);
+  if ((count ?? 0) >= LIMITS.newOrgsPerUser) return tooMany;
+
+  const { data, error } = await db.from("orgs").insert({ ...row, created_by: user.email }).select().single();
+  if (error?.message.includes("org_limit_reached")) return tooMany;
   if (error) return serverError("org-save", error);
   const { error: memberError } = await db.from("org_members").insert({ org_id: data.id, email: user.email, role: "owner", added_by: user.email });
   if (memberError) return serverError("org-save", memberError);
