@@ -7,8 +7,8 @@ const FIT_CONCURRENCY = 4; // Fit agents running at once
 
 // One full scan: Scout finds candidates, then a Fit agent judges each one.
 // Results are saved as they arrive so the dashboard fills in live.
-// weekly = the scheduled/"Run weekly scan now" scan, which also hands results to n8n.
-export async function runScan(orgId: string, scanId: string, weekly = false) {
+// sendDigest = a member clicked "Scan and email the digest": hand the results to n8n afterwards.
+export async function runScan(orgId: string, scanId: string, sendDigest = false) {
   // /api/scan-start already created the scan row; local scripts haven't.
   const { error: scanError } = await db.from("scans").upsert({ id: scanId, org_id: orgId, status: "running" }, { onConflict: "id", ignoreDuplicates: true });
   if (scanError) throw new Error(scanError.message);
@@ -59,7 +59,7 @@ export async function runScan(orgId: string, scanId: string, weekly = false) {
       .update({ status: "done", finished_at: new Date().toISOString(), sources_checked: sourcesChecked, counts })
       .eq("id", scanId);
     await logStep(scanId, "Scan", `Done: ${counts.apply} apply, ${counts.maybe} maybe, ${counts.skip} skip`);
-    if (weekly) await sendToAutomation(scanId);
+    if (sendDigest) await sendToAutomation(scanId);
   } catch (err) {
     console.error("scan failed:", (err as Error).message); // details stay in the server log
     const message = "Something went wrong. Try again in a minute.";

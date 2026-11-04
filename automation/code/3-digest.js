@@ -17,7 +17,7 @@ try {
 } catch (e) {
   // Calendar step didn't run this time.
 }
-if (created === 0 && failed === 0) await log('No Apply matches have a stated deadline, so no calendar events this week');
+if (created === 0 && failed === 0) await log('No Apply matches have a stated deadline, so no calendar events were added');
 if (created) await log(`Added ${events(created)} to the calendar (deadlines + 2-week reminders)`);
 if (failed) await log(`Couldn't add ${events(failed)} to the calendar`);
 
@@ -32,6 +32,6 @@ const rows = matches
     return `<li><b>${link(m.app_link, m.title)}</b> (${esc(m.provider)})<br>Amount: ${esc(m.amount || 'see source')} · Deadline: ${deadline} · ${link(m.url, 'original source')}${m.reason ? `<br><span style="color:#444">${esc(m.reason)}</span>` : ''}</li>`;
   })
   .join('');
-const html = `<h2>FundScout weekly digest: ${esc(body.org_name)}</h2><p>Top matches worth applying for this week:</p><ul>${rows || '<li>No new Apply matches this week.</li>'}</ul><p style="color:#666">Sources checked this week: ${esc((body.sources_checked || []).join(', '))}.</p><p style="color:#666">FundScout never submits anything. Review each draft and submit it yourself.</p>`;
+const html = `<h2>FundScout funding digest: ${esc(body.org_name)}</h2><p>Top matches worth applying for:</p><ul>${rows || '<li>No Apply matches in this scan.</li>'}</ul><p style="color:#666">Sources checked in this scan: ${esc((body.sources_checked || []).join(', '))}.</p><p style="color:#666">FundScout never submits anything. Review each draft and submit it yourself.</p>`;
 const subject = `FundScout: ${matches.length} funding ${matches.length === 1 ? 'match' : 'matches'} for ${oneLine(body.org_name)}`;
 return [{ json: { to, subject, html } }];

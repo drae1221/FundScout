@@ -2,7 +2,7 @@
 
 **Finds the funding your club didn't know existed.**
 
-Student clubs mostly use one funding source. FundScout checks CU Boulder's student funds, federal grants and the web for a club, decides which opportunities are worth pursuing, drafts the request, and sends the treasurer a weekly digest with deadlines on their calendar.
+Student clubs mostly use one funding source. FundScout checks CU Boulder's student funds, federal grants and the web for a club, decides which opportunities are worth pursuing, drafts the request, and, when an officer asks, emails the treasurer a digest and puts deadlines on their calendar.
 
 - **Live app:** https://fundscout-cu.netlify.app (club officers log in with an email link)
 - **Cached demo run** (replays a saved scan, no live AI calls): https://fundscout-cu.netlify.app/?demo
@@ -16,7 +16,7 @@ Find funding ──► Scout agent ──► Fit & Eligibility agent (one per ca
                                                                                      │
 Open an Apply card ──► Drafter agent ──► draft with highlighted assumptions ◄────────┘
 
-Run weekly scan now ──► scan ──► n8n automation ──► calendar events ──► digest email ──► steps logged back
+Scan and email the digest ──► scan ──► n8n automation ──► calendar events ──► digest email ──► steps logged back
 ```
 
 **Three AI agents** (Claude, `claude-sonnet-5-5`, tool use), each a loop that picks its own next step and logs it to the on-screen activity log:
@@ -29,7 +29,7 @@ Run weekly scan now ──► scan ──► n8n automation ──► calendar e
 
 **Profile and confirmed facts:** each organization has a profile page (add new clubs or nonprofits from the club picker). On a Maybe or Skip card, the treasurer can answer an eligibility flag with **We meet this** and a reason; the answer is saved to the profile as a confirmed fact, and **Re-check this opportunity** runs the Fit agent again with it. Every agent reads confirmed facts on every scan, so one answer helps with future opportunities too.
 
-**Automation (n8n, separate from the agents):** when a weekly scan finishes, FundScout posts the Apply matches to an n8n webhook. n8n checks for deadlines, adds each deadline and a 2-week reminder to Google Calendar, emails the digest from Gmail, and posts each step back to `/api/automation-log`, which shows it in the activity log. The workflow export is in [automation/n8n-workflow.json](automation/n8n-workflow.json).
+**Automation (n8n, separate from the agents):** when a member clicks **Scan and email the digest** and the scan finishes, FundScout posts the Apply matches to an n8n webhook. n8n checks for deadlines, adds each deadline and a 2-week reminder to Google Calendar, emails the digest from Gmail, and posts each step back to `/api/automation-log`, which shows it in the activity log. The workflow export is in [automation/n8n-workflow.json](automation/n8n-workflow.json).
 
 ## Guardrails
 

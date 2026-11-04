@@ -92,8 +92,8 @@ function Pipeline({ email }: { email: string | null }) {
   const [error, setError] = useState<string | null>(null);
   const logPanel = useRef<HTMLElement>(null);
   const [demoSavedAt, setDemoSavedAt] = useState<string | null>(null);
-  // After a weekly scan finishes, keep refreshing for a while so n8n's steps show up.
-  const [weeklyScanId, setWeeklyScanId] = useState<string | null>(null);
+  // After a "Scan and email the digest" scan finishes, keep refreshing for a while so n8n's steps show up.
+  const [digestScanId, setDigestScanId] = useState<string | null>(null);
   const [automationUntil, setAutomationUntil] = useState(0);
 
   useEffect(() => {
@@ -148,22 +148,22 @@ function Pipeline({ email }: { email: string | null }) {
     setData(d);
     if (d.scan && d.scan.status !== "running") {
       setActiveScanId(null);
-      if (scanId === weeklyScanId) setAutomationUntil(Date.now() + 90_000);
+      if (scanId === digestScanId) setAutomationUntil(Date.now() + 90_000);
     }
-  }, [weeklyScanId]);
+  }, [digestScanId]);
 
   useEffect(() => {
-    if (!automationUntil || !weeklyScanId) return;
+    if (!automationUntil || !digestScanId) return;
     const timer = setInterval(() => {
       if (Date.now() > automationUntil) {
         setAutomationUntil(0);
-        setWeeklyScanId(null);
+        setDigestScanId(null);
         return;
       }
-      getJson<ScanData>(`/api/scan-status?scan_id=${weeklyScanId}`).then(setData).catch(() => {});
+      getJson<ScanData>(`/api/scan-status?scan_id=${digestScanId}`).then(setData).catch(() => {});
     }, 2000);
     return () => clearInterval(timer);
-  }, [automationUntil, weeklyScanId]);
+  }, [automationUntil, digestScanId]);
 
   useEffect(() => {
     if (!activeScanId || DEMO_MODE) return; // the demo replays from the saved file instead
@@ -197,16 +197,16 @@ function Pipeline({ email }: { email: string | null }) {
     });
   }
 
-  // weekly = what the scheduled scan does: scan, then hand the results to the n8n automation.
-  async function findFunding(weekly = false) {
+  // sendDigest = scan, then hand the results to the n8n automation (calendar + digest email).
+  async function findFunding(sendDigest = false) {
     setError(null);
     if (DEMO_MODE) return replayDemo();
     setData(EMPTY);
     setAutomationUntil(0);
-    const res = await postJson("/api/scan-start", { org_id: orgId, weekly });
+    const res = await postJson("/api/scan-start", { org_id: orgId, send_digest: sendDigest });
     if (!res.ok) return setError(await errorText(res, "Couldn't start the scan"));
     const { scan_id } = await res.json();
-    setWeeklyScanId(weekly ? scan_id : null);
+    setDigestScanId(sendDigest ? scan_id : null);
     setActiveScanId(scan_id);
   }
 
@@ -252,7 +252,7 @@ function Pipeline({ email }: { email: string | null }) {
           )}
           {!DEMO_MODE && (
             <button onClick={() => findFunding(true)} disabled={!orgId || running} title="Scan, then email the digest and add deadlines to the calendar">
-              Run weekly scan now
+              Scan and email the digest
             </button>
           )}
           <button className="primary" onClick={() => findFunding()} disabled={!orgId || running}>
