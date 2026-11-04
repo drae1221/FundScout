@@ -5,7 +5,8 @@ import { EMAIL } from "../lib/automation";
 import { LIMITS } from "../lib/limits";
 
 // POST /api/org-save { id?, ...profile fields }
-// Updates an organization (members only) or creates one (anyone who already belongs to
+// Updates an organization (members only; only owners may change the digest emails,
+// funding_contacts, since they decide where the club's email goes) or creates one (anyone who already belongs to
 // an organization, up to LIMITS.newOrgsPerUser; the creator becomes its owner).
 // Only the profile fields below can be set.
 const TEXT = ["name", "university", "mission", "activities", "funding_goals", "past_wins"] as const;
@@ -36,6 +37,14 @@ export default async (req: Request) => {
   if (body.id) {
     const auth = await requireMember(req, body.id as string);
     if (auth instanceof Response) return auth;
+    if (row.funding_contacts && auth.role !== "owner") {
+      const { data: current } = await db.from("orgs").select("funding_contacts").eq("id", body.id).single();
+      const same = (a: string[]) => [...a].map((e) => e.toLowerCase()).sort().join(",");
+      if (same(row.funding_contacts as string[]) !== same(current?.funding_contacts ?? [])) {
+        return Response.json({ error: "Only the club's owners can change the digest emails." }, { status: 403 });
+      }
+      delete row.funding_contacts; // unchanged: nothing to save
+    }
     const { data, error } = await db.from("orgs").update(row).eq("id", body.id).select().single();
     if (error) return serverError("org-save", error);
     return Response.json(data);

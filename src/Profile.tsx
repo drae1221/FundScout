@@ -73,6 +73,8 @@ export default function Profile({ id, onSaved }: { id: string | "new"; onSaved: 
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [members, setMembers] = useState<Member[]>([]);
+  // Creating a new organization makes you its owner; otherwise the server says your role.
+  const isNewOrOwner = id === "new" || form?.my_role === "owner";
 
   useEffect(() => {
     if (id === "new") return;
@@ -100,7 +102,8 @@ export default function Profile({ id, onSaved }: { id: string | "new"; onSaved: 
       ...profile,
       id: id === "new" ? undefined : id,
       industry_ties: splitList(form.industry_ties),
-      funding_contacts: splitList(form.funding_contacts),
+      // Only owners can change where the digest goes; members leave it out.
+      ...(isNewOrOwner ? { funding_contacts: splitList(form.funding_contacts) } : {}),
     });
     setSaving(false);
     if (!res.ok) return setError(await errorText(res, "Couldn't save"));
@@ -207,8 +210,8 @@ export default function Profile({ id, onSaved }: { id: string | "new"; onSaved: 
             <Field label="Target amount ($)">
               <input {...text("target_amount")} inputMode="numeric" placeholder="e.g. 3000" />
             </Field>
-            <Field label="Digest emails" hint="Comma-separated">
-              <input {...text("funding_contacts")} placeholder="treasurer@example.com" />
+            <Field label="Digest emails" hint={isNewOrOwner ? "Comma-separated" : "Only the club's owners can change these"}>
+              <input {...text("funding_contacts")} placeholder="treasurer@example.com" readOnly={!isNewOrOwner} />
             </Field>
           </div>
         </section>
